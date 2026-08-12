@@ -15,14 +15,28 @@ export default defineConfig({
     react({
       babel: {
         plugins: [
-          ['@babel/plugin-transform-react-jsx', { runtime: 'automatic', importSource: 'nativewind' }],
+          [
+            '@babel/plugin-transform-react-jsx',
+            { runtime: 'automatic', importSource: 'nativewind' },
+          ],
         ],
       },
     }),
   ],
   resolve: {
     alias: { 'react-native': 'react-native-web' },
-    extensions: ['.web.tsx', '.web.ts', '.tsx', '.ts', '.web.jsx', '.web.js', '.jsx', '.js', '.json'],
+    extensions: [
+      '.web.tsx',
+      '.web.ts',
+      '.tsx',
+      '.ts',
+      '.web.jsx',
+      '.web.js',
+      '.jsx',
+      '.js',
+      '.json',
+    ],
+    preserveSymlinks: true,
   },
   define: {
     global: 'window',
@@ -32,6 +46,7 @@ export default defineConfig({
   optimizeDeps: {
     include: ['react-native-web'],
     esbuildOptions: { resolveExtensions: ['.web.js', '.web.ts', '.web.tsx', '.js', '.ts', '.tsx'] },
+    exclude: ['@repo/types', '@repo/api-client'],
   },
   server: { port: 5173 },
   build: { outDir: 'dist', sourcemap: true },
