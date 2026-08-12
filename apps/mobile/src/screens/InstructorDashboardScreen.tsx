@@ -12,6 +12,7 @@ import { EmptyState, ErrorState, Loading, Screen } from '../components/Screen';
 import { ScoreBar } from '../components/ScoreBar';
 import { SelectField } from '../components/SelectField';
 import { TextField } from '../components/TextField';
+import { ToastBanner } from '../components/ToastBanner';
 import { useCreateUser } from '../hooks/useAuth';
 import { useCourseSummary } from '../hooks/useEvaluations';
 import { useCourses, useDeleteTeam, useDeleteUser, useStudents } from '../hooks/useTeams';
@@ -185,14 +186,17 @@ export function InstructorDashboardScreen({ navigation }: Props) {
         onError: (err) => {
           setSubmitError(err.message || 'Failed to create student. Please check credentials.');
         },
-      }
+      },
     );
   };
 
-  const filteredCourses = (courses.data ?? []).filter((course) => getCourseOrg(course.code) === selectedOrg);
-  const activeCourseId = (courseId && filteredCourses.some((c) => c.id === courseId))
-    ? courseId
-    : (filteredCourses[0]?.id ?? '');
+  const filteredCourses = (courses.data ?? []).filter(
+    (course) => getCourseOrg(course.code) === selectedOrg,
+  );
+  const activeCourseId =
+    courseId && filteredCourses.some((c) => c.id === courseId)
+      ? courseId
+      : (filteredCourses[0]?.id ?? '');
 
   const summary = useCourseSummary(activeCourseId);
   const activeCourse = filteredCourses.find((c) => c.id === activeCourseId);
@@ -255,10 +259,14 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                 onPress={() => setCourseId(course.id)}
                 className={[
                   'rounded-full px-3.5 py-2 transition-all',
-                  selected ? 'liquid-glass-pill-active' : 'border border-slate-300 bg-white hover:bg-slate-50',
+                  selected
+                    ? 'liquid-glass-pill-active'
+                    : 'border border-slate-300 bg-white hover:bg-slate-50',
                 ].join(' ')}
               >
-                <Text className={selected ? 'text-sm font-bold text-[#2563eb]' : 'text-sm text-ink-700'}>
+                <Text
+                  className={selected ? 'text-sm font-bold text-[#2563eb]' : 'text-sm text-ink-700'}
+                >
                   {course.code} · {course.term}
                 </Text>
               </Pressable>
@@ -272,11 +280,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
         />
       )}
 
-      {successMessage ? (
-        <View className="rounded-lg border border-emerald-300 bg-emerald-50 p-3">
-          <Text className="text-sm font-semibold text-emerald-800">✓ {successMessage}</Text>
-        </View>
-      ) : null}
+      <ToastBanner message={successMessage} onClose={() => setSuccessMessage('')} />
 
       <View className="flex-row items-center gap-3">
         {activeCourse ? (
@@ -342,7 +346,11 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                 </Pressable>
               </View>
 
-              <ScrollView className="flex-1" contentContainerClassName="gap-4 py-2" showsVerticalScrollIndicator>
+              <ScrollView
+                className="flex-1"
+                contentContainerClassName="gap-4 py-2"
+                showsVerticalScrollIndicator
+              >
                 {/* Two-Column Form Layout */}
                 <View className="flex-col sm:flex-row gap-4">
                   {/* Left Column: Name & ID */}
@@ -481,7 +489,11 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                 </Pressable>
               </View>
 
-              <ScrollView className="flex-1" contentContainerClassName="gap-4 py-2" showsVerticalScrollIndicator>
+              <ScrollView
+                className="flex-1"
+                contentContainerClassName="gap-4 py-2"
+                showsVerticalScrollIndicator
+              >
                 <View className="flex-col sm:flex-row gap-4">
                   <View className="flex-1 gap-3">
                     <TextField
@@ -575,7 +587,9 @@ export function InstructorDashboardScreen({ navigation }: Props) {
             >
               <Text
                 className={
-                  viewMode === 'teams' ? 'text-sm font-bold text-[#2563eb]' : 'text-sm font-medium text-slate-600'
+                  viewMode === 'teams'
+                    ? 'text-sm font-bold text-[#2563eb]'
+                    : 'text-sm font-medium text-slate-600'
                 }
               >
                 👥 Teams ({summary.data?.length ?? 0})
@@ -591,7 +605,9 @@ export function InstructorDashboardScreen({ navigation }: Props) {
             >
               <Text
                 className={
-                  viewMode === 'students' ? 'text-sm font-bold text-[#2563eb]' : 'text-sm font-medium text-slate-600'
+                  viewMode === 'students'
+                    ? 'text-sm font-bold text-[#2563eb]'
+                    : 'text-sm font-medium text-slate-600'
                 }
               >
                 🎓 Student Directory ({studentDirectory.data?.length ?? 0})
@@ -603,7 +619,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
             <TextField
               label=""
               placeholder={
-                viewMode === 'teams' ? '🔍 Search teams by name...' : '🔍 Search students (name, ID, email)...'
+                viewMode === 'teams' ? '🔍 Search teams by name...' : '🔍 Search students'
               }
               value={viewMode === 'teams' ? teamSearch : studentSearch}
               onChangeText={viewMode === 'teams' ? setTeamSearch : setStudentSearch}
@@ -632,11 +648,17 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                 onPress={() => setSortBy(key)}
                 className={[
                   'rounded-lg px-3 py-1.5 transition-all',
-                  sortBy === key ? 'liquid-glass-pill-active' : 'border border-slate-200 bg-white hover:bg-slate-50',
+                  sortBy === key
+                    ? 'liquid-glass-pill-active'
+                    : 'border border-slate-200 bg-white hover:bg-slate-50',
                 ].join(' ')}
               >
                 <Text
-                  className={sortBy === key ? 'text-xs font-bold text-[#2563eb]' : 'text-xs font-medium text-slate-600'}
+                  className={
+                    sortBy === key
+                      ? 'text-xs font-bold text-[#2563eb]'
+                      : 'text-xs font-medium text-slate-600'
+                  }
                 >
                   {label}
                 </Text>
@@ -667,7 +689,9 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                     >
                       <Avatar user={s} size={32} />
                       <View className="items-start text-left">
-                        <Text className="text-left text-sm font-bold text-[#2563eb] underline">{fullName(s)}</Text>
+                        <Text className="text-left text-sm font-bold text-[#2563eb] underline">
+                          {fullName(s)}
+                        </Text>
                         <Text className="text-left text-xs text-muted">{s.email}</Text>
                       </View>
                     </Pressable>
@@ -678,14 +702,18 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                   header: 'Student ID',
                   width: 1.5,
                   render: (s) => (
-                    <Text className="text-left text-sm font-bold text-slate-700">{s.studentId ?? '—'}</Text>
+                    <Text className="text-left text-sm font-bold text-slate-700">
+                      {s.studentId ?? '—'}
+                    </Text>
                   ),
                 },
                 {
                   key: 'email',
                   header: 'Email Address',
                   width: 2,
-                  render: (s) => <Text className="text-left text-sm text-slate-600">{s.email}</Text>,
+                  render: (s) => (
+                    <Text className="text-left text-sm text-slate-600">{s.email}</Text>
+                  ),
                 },
                 {
                   key: 'actions',
@@ -708,7 +736,9 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                         onPress={() => {
                           if (
                             typeof window !== 'undefined' &&
-                            window.confirm(`Are you sure you want to delete student ${fullName(s)}?`)
+                            window.confirm(
+                              `Are you sure you want to delete student ${fullName(s)}?`,
+                            )
                           ) {
                             deleteUserMutation.mutate(s.id, {
                               onSuccess: () => {
@@ -728,8 +758,10 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                 },
               ]}
               rows={[...studentDirectory.data].sort((a, b) => {
-                if (sortBy === 'name') return (a.lastName + a.firstName).localeCompare(b.lastName + b.firstName);
-                if (sortBy === 'studentId') return (a.studentId ?? '').localeCompare(b.studentId ?? '');
+                if (sortBy === 'name')
+                  return (a.lastName + a.firstName).localeCompare(b.lastName + b.firstName);
+                if (sortBy === 'studentId')
+                  return (a.studentId ?? '').localeCompare(b.studentId ?? '');
                 if (sortBy === 'email') return a.email.localeCompare(b.email);
                 return (a.lastName + a.firstName).localeCompare(b.lastName + b.firstName);
               })}
@@ -757,168 +789,186 @@ export function InstructorDashboardScreen({ navigation }: Props) {
 
           {summary.data
             ?.filter((team) =>
-              team.teamName.toLowerCase().includes(teamSearch.trim().toLowerCase())
+              team.teamName.toLowerCase().includes(teamSearch.trim().toLowerCase()),
             )
             .map((team) => {
               const students = [...team.students].sort((a, b) => {
-                if (sortBy === 'name') return (a.user.lastName + a.user.firstName).localeCompare(b.user.lastName + b.user.firstName);
-                if (sortBy === 'studentId') return (a.user.studentId ?? '').localeCompare(b.user.studentId ?? '');
+                if (sortBy === 'name')
+                  return (a.user.lastName + a.user.firstName).localeCompare(
+                    b.user.lastName + b.user.firstName,
+                  );
+                if (sortBy === 'studentId')
+                  return (a.user.studentId ?? '').localeCompare(b.user.studentId ?? '');
                 if (sortBy === 'email') return a.user.email.localeCompare(b.user.email);
                 if (sortBy === 'reviews') return b.reviewCount - a.reviewCount;
                 return b.overall - a.overall;
               });
 
-        const isExpanded = Boolean(expandedTeams[team.teamId]);
+              const isExpanded = Boolean(expandedTeams[team.teamId]);
 
-        return (
-          <View
-            key={team.teamId}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-card"
-          >
-            <View className="flex-row items-center justify-between gap-3">
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ expanded: isExpanded }}
-                onPress={() => toggleTeam(team.teamId)}
-                className="flex-1 flex-row items-center gap-3"
-              >
-                <View className="flex-1">
-                  <Text className="text-lg font-bold text-ink">{team.teamName}</Text>
-                  <Text className="mt-0.5 text-xs text-muted">
-                    {team.memberCount} members · {percent(team.completionRate)} submitted
-                  </Text>
-                </View>
-                <Badge
-                  label={team.overall > 0 ? `${score(team.overall)} avg` : 'No data'}
-                  tone={team.completionRate >= 1 ? 'success' : team.completionRate > 0 ? 'warning' : 'neutral'}
-                />
-              </Pressable>
-
-              <View className="flex-row items-center gap-2">
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Edit team"
-                  onPress={() =>
-                    navigation.navigate('CreateTeam', {
-                      courseId: activeCourse?.id ?? '',
-                      courseCode: activeCourse?.code ?? '',
-                      teamId: team.teamId,
-                      initialName: team.teamName,
-                      initialMemberIds: team.students.map((s) => s.user.id),
-                    })
-                  }
-                  className="flex-row items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all"
+              return (
+                <View
+                  key={team.teamId}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-card"
                 >
-                  <Text className="text-xs font-bold text-slate-500">✏</Text>
-                  <Text className="text-xs font-semibold text-slate-700">Edit</Text>
-                </Pressable>
-
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Delete team"
-                  onPress={() => {
-                    if (
-                      typeof window !== 'undefined' &&
-                      window.confirm(`Are you sure you want to delete team "${team.teamName}"?`)
-                    ) {
-                      deleteTeamMutation.mutate(team.teamId, {
-                        onSuccess: () => {
-                          setSuccessMessage(`Successfully deleted team "${team.teamName}"`);
-                          setTimeout(() => setSuccessMessage(''), 5000);
-                        },
-                      });
-                    }
-                  }}
-                  className="flex-row items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/80 px-3 py-1.5 shadow-sm hover:border-blue-300 hover:bg-blue-100/80 transition-all"
-                >
-                  <Text className="text-xs font-bold text-blue-600">🗑</Text>
-                  <Text className="text-xs font-semibold text-blue-700">Delete</Text>
-                </Pressable>
-
-                <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Toggle details"
-                  onPress={() => toggleTeam(team.teamId)}
-                  className="h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-all"
-                >
-                  <Text className="text-xs font-bold text-[#2563eb]">
-                    {isExpanded ? '▲' : '▼'}
-                  </Text>
-                </Pressable>
-              </View>
-            </View>
-
-            {isExpanded ? (
-              <View className="mt-4 gap-4 border-t border-slate-200 pt-4">
-                {team.overall > 0 ? (
-                  <View className="gap-3">
-                    {Object.values(EvalDimension).map((d) => (
-                      <ScoreBar key={d} label={DIMENSION_LABELS[d]} value={team.averages[d]} />
-                    ))}
-                  </View>
-                ) : null}
-
-                <View className="gap-2">
-                  {students.map((s) => (
-                    <View key={s.user.id} className="flex-row items-center justify-between gap-3 rounded-xl border border-slate-200/60 bg-slate-50/70 p-3">
+                  <View className="flex-row items-center justify-between gap-3">
+                    <Pressable
+                      accessibilityRole="button"
+                      accessibilityState={{ expanded: isExpanded }}
+                      onPress={() => toggleTeam(team.teamId)}
+                      className="flex-1 flex-row items-center gap-3"
+                    >
                       <View className="flex-1">
-                        <Text className="text-sm font-bold text-ink-900">
-                          {s.user.firstName} {s.user.lastName}
-                        </Text>
-                        <Text className="text-xs text-ink-500">
-                          {s.user.studentId ? `ID ${s.user.studentId} · ` : ''}
-                          {s.reviewCount} review{s.reviewCount === 1 ? '' : 's'}
-                          {s.comments.length > 0 ? ` · ${s.comments.length} comments` : ''}
+                        <Text className="text-lg font-bold text-ink">{team.teamName}</Text>
+                        <Text className="mt-0.5 text-xs text-muted">
+                          {team.memberCount} members · {percent(team.completionRate)} submitted
                         </Text>
                       </View>
-                      <View className="flex-row items-center gap-3">
-                        <Text className="text-sm font-extrabold text-ink-900">
-                          {s.reviewCount > 0 ? score(s.overall) : '—'}
-                        </Text>
-                        <Pressable
-                          accessibilityRole="button"
-                          accessibilityLabel="Delete user"
-                          onPress={() => {
-                            if (
-                              typeof window !== 'undefined' &&
-                              window.confirm(
-                                `Are you sure you want to delete user ${s.user.firstName} ${s.user.lastName}?`
-                              )
-                            ) {
-                              deleteUserMutation.mutate(s.user.id, {
-                                onSuccess: () => {
-                                  setSuccessMessage(
-                                    `Successfully deleted student ${s.user.firstName} ${s.user.lastName}`
-                                  );
-                                  setTimeout(() => setSuccessMessage(''), 5000);
-                                },
-                              });
-                            }
-                          }}
-                          className="flex-row items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 shadow-xs hover:border-blue-300 hover:bg-blue-100 transition-all"
-                        >
-                          <Text className="text-xs font-bold text-blue-600">✕</Text>
-                          <Text className="text-xs font-medium text-blue-700">Remove</Text>
-                        </Pressable>
-                      </View>
-                    </View>
-                  ))}
-                </View>
+                      <Badge
+                        label={team.overall > 0 ? `${score(team.overall)} avg` : 'No data'}
+                        tone={
+                          team.completionRate >= 1
+                            ? 'success'
+                            : team.completionRate > 0
+                              ? 'warning'
+                              : 'neutral'
+                        }
+                      />
+                    </Pressable>
 
-                <Button
-                  label="Open team details"
-                  variant="secondary"
-                  onPress={() => navigation.navigate('TeamDetail', { teamId: team.teamId })}
-                  fullWidth
-                />
-              </View>
-            ) : null}
-          </View>
-        );
-      })}
+                    <View className="flex-row items-center gap-2">
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Edit team"
+                        onPress={() =>
+                          navigation.navigate('CreateTeam', {
+                            courseId: activeCourse?.id ?? '',
+                            courseCode: activeCourse?.code ?? '',
+                            teamId: team.teamId,
+                            initialName: team.teamName,
+                            initialMemberIds: team.students.map((s) => s.user.id),
+                          })
+                        }
+                        className="flex-row items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all"
+                      >
+                        <Text className="text-xs font-bold text-slate-500">✏</Text>
+                        <Text className="text-xs font-semibold text-slate-700">Edit</Text>
+                      </Pressable>
+
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Delete team"
+                        onPress={() => {
+                          if (
+                            typeof window !== 'undefined' &&
+                            window.confirm(
+                              `Are you sure you want to delete team "${team.teamName}"?`,
+                            )
+                          ) {
+                            deleteTeamMutation.mutate(team.teamId, {
+                              onSuccess: () => {
+                                setSuccessMessage(`Successfully deleted team "${team.teamName}"`);
+                                setTimeout(() => setSuccessMessage(''), 5000);
+                              },
+                            });
+                          }
+                        }}
+                        className="flex-row items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/80 px-3 py-1.5 shadow-sm hover:border-blue-300 hover:bg-blue-100/80 transition-all"
+                      >
+                        <Text className="text-xs font-bold text-blue-600">🗑</Text>
+                        <Text className="text-xs font-semibold text-blue-700">Delete</Text>
+                      </Pressable>
+
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Toggle details"
+                        onPress={() => toggleTeam(team.teamId)}
+                        className="h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-all"
+                      >
+                        <Text className="text-xs font-bold text-[#2563eb]">
+                          {isExpanded ? '▲' : '▼'}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+
+                  {isExpanded ? (
+                    <View className="mt-4 gap-4 border-t border-slate-200 pt-4">
+                      {team.overall > 0 ? (
+                        <View className="gap-3">
+                          {Object.values(EvalDimension).map((d) => (
+                            <ScoreBar
+                              key={d}
+                              label={DIMENSION_LABELS[d]}
+                              value={team.averages[d]}
+                            />
+                          ))}
+                        </View>
+                      ) : null}
+
+                      <View className="gap-2">
+                        {students.map((s) => (
+                          <View
+                            key={s.user.id}
+                            className="flex-row items-center justify-between gap-3 rounded-xl border border-slate-200/60 bg-slate-50/70 p-3"
+                          >
+                            <View className="flex-1">
+                              <Text className="text-sm font-bold text-ink-900">
+                                {s.user.firstName} {s.user.lastName}
+                              </Text>
+                              <Text className="text-xs text-ink-500">
+                                {s.user.studentId ? `ID ${s.user.studentId} · ` : ''}
+                                {s.reviewCount} review{s.reviewCount === 1 ? '' : 's'}
+                                {s.comments.length > 0 ? ` · ${s.comments.length} comments` : ''}
+                              </Text>
+                            </View>
+                            <View className="flex-row items-center gap-3">
+                              <Text className="text-sm font-extrabold text-ink-900">
+                                {s.reviewCount > 0 ? score(s.overall) : '—'}
+                              </Text>
+                              <Pressable
+                                accessibilityRole="button"
+                                accessibilityLabel="Delete user"
+                                onPress={() => {
+                                  if (
+                                    typeof window !== 'undefined' &&
+                                    window.confirm(
+                                      `Are you sure you want to delete user ${s.user.firstName} ${s.user.lastName}?`,
+                                    )
+                                  ) {
+                                    deleteUserMutation.mutate(s.user.id, {
+                                      onSuccess: () => {
+                                        setSuccessMessage(
+                                          `Successfully deleted student ${s.user.firstName} ${s.user.lastName}`,
+                                        );
+                                        setTimeout(() => setSuccessMessage(''), 5000);
+                                      },
+                                    });
+                                  }
+                                }}
+                                className="flex-row items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 shadow-xs hover:border-blue-300 hover:bg-blue-100 transition-all"
+                              >
+                                <Text className="text-xs font-bold text-blue-600">✕</Text>
+                                <Text className="text-xs font-medium text-blue-700">Remove</Text>
+                              </Pressable>
+                            </View>
+                          </View>
+                        ))}
+                      </View>
+
+                      <Button
+                        label="Open team details"
+                        variant="secondary"
+                        onPress={() => navigation.navigate('TeamDetail', { teamId: team.teamId })}
+                        fullWidth
+                      />
+                    </View>
+                  ) : null}
+                </View>
+              );
+            })}
         </>
       )}
     </Screen>
   );
 }
-
