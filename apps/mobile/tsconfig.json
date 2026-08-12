@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "nativewind",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "nativewind/types"],
+    "noEmit": true,
+    "allowJs": false
+  },
+  // `react-native` is deliberately NOT remapped for TypeScript: the real
+  // react-native types are the contract react-native-web implements. The alias
+  // to react-native-web happens at bundle time (see vite.config.ts).
+  "include": ["src/**/*.ts", "src/**/*.tsx", "test/**/*.ts", "test/**/*.tsx", "*.ts"]
+}

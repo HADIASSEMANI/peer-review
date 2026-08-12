@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    // rootDir MUST stay "src" here, not just in tsconfig.build.json:
+    // `nest build` reads tsconfig.build.json but `nest start --watch` falls
+    // back to this file, and a different rootDir moves the entry point to
+    // dist/src/main.js while the CLI keeps looking for dist/main.js.
+    "rootDir": "src",
+    "baseUrl": ".",
+    "declaration": false,
+    "sourceMap": true,
+    "removeComments": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "strictBindCallApply": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "incremental": true,
+    // Keep the incremental cache inside dist so `deleteOutDir` clears it too.
+    // Otherwise a stale .tsbuildinfo makes tsc skip emitting after dist is wiped.
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "test"]
+}

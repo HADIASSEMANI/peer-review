@@ -1,0 +1,9 @@
+{
+  // Typecheck-only config that also covers the test suite. The tests are never
+  // emitted (Vitest compiles them with SWC), so they stay out of the build
+  // configs and cannot influence rootDir.
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": true, "rootDir": "." },
+  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

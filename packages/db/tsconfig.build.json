@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // CommonJS on purpose: NestJS compiles to CJS and must be able to
+    // require() these packages. Vite pre-bundles them for the web app
+    // (see optimizeDeps.include in apps/mobile/vite.config.ts).
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "rootDir": "src",
+    "outDir": "dist",
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": false
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "prisma", "scripts"]
+}

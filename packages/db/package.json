@@ -1,0 +1,41 @@
+{
+  "name": "@repo/db",
+  "version": "2.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "schema": "node scripts/build-schema.mjs",
+    "generate": "bun run schema && prisma generate --schema prisma/schema.prisma",
+    "push": "bun run schema && prisma db push --schema prisma/schema.prisma --skip-generate",
+    "migrate": "bun run schema && prisma migrate dev --schema prisma/schema.prisma",
+    "seed": "bun run schema && bun run prisma/seed.ts",
+    "reset": "bun run schema && prisma db push --force-reset --schema prisma/schema.prisma --skip-generate && bun run seed",
+    "studio": "bun run schema && prisma studio --schema prisma/schema.prisma",
+    "build": "bun run generate && tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo \"lint: @repo/db ok\"",
+    "clean": "rm -rf generated dist .turbo tsconfig.build.tsbuildinfo prisma/schema.prisma prisma/dev.db"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.1.0",
+    "@repo/types": "workspace:*",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "prisma": "^6.1.0",
+    "typescript": "^5.7.2"
+  },
+  "files": [
+    "dist",
+    "generated"
+  ]
+}

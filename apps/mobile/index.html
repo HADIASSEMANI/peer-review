@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Peer Review</title>
+    <style>
+      html, body, #root { height: 100%; margin: 0; }
+      /* react-native-web's root View is `flex: 1`, which only resolves if its
+         parent is itself a flex container with a real height. Without this the
+         whole tree collapses to zero height. */
+      #root { display: flex; flex-direction: column; }
+      body { background: #f8fafc; -webkit-font-smoothing: antialiased; }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

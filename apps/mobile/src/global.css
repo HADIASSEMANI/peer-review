@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+::selection {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.text-ink,
+.text-ink-900 {
+  color: #0f172a !important;
+}
+
+.text-ink-700 {
+  color: #334155 !important;
+}
+
+.text-ink-500 {
+  color: #64748b !important;
+}
+
+.text-gradient-blue {
+  background-image: linear-gradient(90deg, #2563eb, #15aabf);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.liquid-glass-active {
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.9) 0%, rgba(219, 234, 254, 0.75) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid rgba(37, 99, 235, 0.4);
+  box-shadow: 0 4px 16px 0 rgba(37, 99, 235, 0.15), inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.9);
+}
+
+.liquid-glass-pill-active {
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.95) 0%, rgba(219, 234, 254, 0.85) 100%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(37, 99, 235, 0.45);
+  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.18), inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.95);
+}
+
+

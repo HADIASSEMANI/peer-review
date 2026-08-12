@@ -1,0 +1,6 @@
+{
+  // Same shape as tsconfig.json — kept because nest-cli.json points here and
+  // to make the build's exclusions explicit.
+  "extends": "./tsconfig.json",
+  "exclude": ["node_modules", "dist", "test", "**/*.spec.ts"]
+}

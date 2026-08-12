@@ -1,0 +1,9 @@
+[install]
+# Hoist to the workspace root so Turbo tasks resolve shared deps.
+linker = "hoisted"
+exact = false
+
+[install.scopes]
+
+[test]
+coverage = false

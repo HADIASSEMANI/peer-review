@@ -1,0 +1,105 @@
+// ---------------------------------------------------------------------------
+// Shared model definitions.
+//
+// This file contains NO datasource/generator block. `scripts/build-schema.mjs`
+// prepends the correct header based on DATABASE_PROVIDER and writes the result
+// to prisma/schema.prisma, so SQLite (dev) and Postgres (prod) can never drift
+// apart. Types are chosen to be valid on both providers: roles and dimensions
+// are stored as strings rather than native enums, because SQLite has none.
+// ---------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  studentId String?  @unique
+  /// "STUDENT" | "INSTRUCTOR" — see @repo/types Role
+  role      String   @default("STUDENT")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  coursesTaught    Course[]     @relation("CourseInstructor")
+  memberships      TeamMember[]
+  evaluationsGiven Evaluation[] @relation("Reviewer")
+  evaluationsGot   Evaluation[] @relation("Reviewee")
+
+  @@index([role])
+}
+
+model Course {
+  id           String   @id @default(cuid())
+  code         String
+  title        String
+  term         String
+  instructorId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  instructor User   @relation("CourseInstructor", fields: [instructorId], references: [id], onDelete: Cascade)
+  teams      Team[]
+
+  @@unique([code, term])
+  @@index([instructorId])
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  courseId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course      Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  members     TeamMember[]
+  evaluations Evaluation[]
+
+  @@unique([courseId, name])
+  @@index([courseId])
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  teamId   String
+  userId   String
+  joinedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // A student belongs to a given team at most once.
+  @@unique([teamId, userId])
+  @@index([userId])
+}
+
+model Evaluation {
+  id         String @id @default(cuid())
+  teamId     String
+  reviewerId String
+  revieweeId String
+
+  // 7-point scale, one score per assessment dimension.
+  cooperation            Int
+  conceptualContribution Int
+  practicalContribution  Int
+  workEthic              Int
+
+  // The original form collected a separate comment under each criterion
+  // rather than one overall note, and the submissions table rendered all four.
+  cooperationComment            String?
+  conceptualContributionComment String?
+  practicalContributionComment  String?
+  workEthicComment              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team     Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  reviewer User @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewee User @relation("Reviewee", fields: [revieweeId], references: [id], onDelete: Cascade)
+
+  // One evaluation per reviewer→reviewee pair per team; re-submitting updates it.
+  @@unique([teamId, reviewerId, revieweeId])
+  @@index([teamId, revieweeId])
+}
