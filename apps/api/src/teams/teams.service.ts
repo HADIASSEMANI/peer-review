@@ -20,7 +20,7 @@ type TeamRow = {
   name: string;
   courseId: string;
   createdAt: Date;
-  course?: { id: string; code: string; title: string; term: string; instructorId: string; createdAt: Date } | null;
+  course?: { id: string; code: string; title: string; term: string; organizationId: string; instructorId: string; createdAt: Date } | null;
   members?: Array<{
     id: string;
     userId: string;
@@ -42,6 +42,7 @@ function toTeam(t: TeamRow): Team {
           code: t.course.code,
           title: t.course.title,
           term: t.course.term,
+          organizationId: t.course.organizationId,
           instructorId: t.course.instructorId,
           createdAt: t.course.createdAt.toISOString(),
         }
