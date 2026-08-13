@@ -179,6 +179,34 @@ describe('Peer Review API (e2e)', () => {
       .expect(403);
   });
 
+  it('refuses to put a student on two teams in the same course', async () => {
+    const token = await login(INSTRUCTOR);
+
+    const courses = await http().get('/api/courses').auth(token, { type: 'bearer' }).expect(200);
+    const courseId = courses.body[0].id as string;
+
+    const teams = await http()
+      .get(`/api/teams?courseId=${courseId}`)
+      .auth(token, { type: 'bearer' })
+      .expect(200);
+    const alpha = teams.body.find((t: { teamName?: string; name: string }) => t.name === 'Team Alpha');
+    expect(alpha).toBeDefined();
+    const alreadyRostered = alpha.members[0].userId as string;
+
+    const res = await http()
+      .post('/api/teams')
+      .auth(token, { type: 'bearer' })
+      .send({
+        name: 'Conflict Check Team',
+        courseId,
+        memberIds: [alreadyRostered],
+      })
+      .expect(400);
+
+    // The message names the offending student and their existing team.
+    expect(JSON.stringify(res.body.message)).toContain('one team per course');
+  });
+
   it('gives the instructor aggregated team results', async () => {
     const token = await login(INSTRUCTOR);
     const courses = await http().get('/api/courses').auth(token, { type: 'bearer' }).expect(200);

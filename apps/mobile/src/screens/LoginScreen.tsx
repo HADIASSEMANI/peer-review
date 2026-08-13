@@ -2,9 +2,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { loginSchema, type LoginInput } from '@repo/types';
 import { Controller, useForm } from 'react-hook-form';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import { AppShell } from '../components/AppShell';
-import { GradientButton } from '../components/GradientButton';
+import { ButtonGroup } from '../components/ButtonGroup';
 import { TextField } from '../components/TextField';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useLogin } from '../hooks/useAuth';
@@ -77,6 +77,7 @@ export function LoginScreen({ navigation }: Props) {
                   onChangeText={field.onChange}
                   keyboardType="email-address"
                   error={fieldState.error?.message}
+                  onSubmitEditing={onSubmit}
                   required
                 />
               )}
@@ -94,66 +95,65 @@ export function LoginScreen({ navigation }: Props) {
                   onChangeText={field.onChange}
                   secureTextEntry
                   error={fieldState.error?.message}
+                  onSubmitEditing={onSubmit}
                   required
                 />
               )}
             />
 
             {login.isError ? (
-              <Text className="text-sm text-blue-600">{(login.error as Error).message}</Text>
+              <Text className="text-sm text-amber-700">{(login.error as Error).message}</Text>
             ) : null}
 
+            {/* Sign in and sign up share one capsule: they are alternatives,
+                not a primary action followed by an afterthought. */}
             <View className="pt-2">
-              <GradientButton
-                testID="login-submit"
-                label="Login"
-                tone="blue"
-                onPress={onSubmit}
-                loading={login.isPending}
+              <ButtonGroup
+                items={[
+                  {
+                    label: 'Login',
+                    testID: 'login-submit',
+                    primary: true,
+                    loading: login.isPending,
+                    onPress: onSubmit,
+                  },
+                  {
+                    label: 'Create new account',
+                    onPress: () => navigation.navigate('Register'),
+                  },
+                ]}
                 height={56}
               />
             </View>
-
-            <View className="my-2 h-px w-full bg-[#d3d3d3]" />
-
-            <GradientButton
-              label="Create new account"
-              tone="green"
-              onPress={() => navigation.navigate('Register')}
-              height={50}
-            />
 
             <View className="gap-2 pt-2 border-t border-[#d3d3d3]">
               <Text className="text-center text-xs font-medium text-muted">
                 Click a demo account below to autofill login credentials:
               </Text>
-              <View className="flex-row flex-wrap items-center justify-center gap-2">
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => {
-                    setValue('email', 'instructor@peerreview.dev');
-                    setValue('password', 'Password123');
-                  }}
-                  className="rounded-full liquid-glass-pill-active px-3 py-1.5 hover:scale-105 transition-all"
-                >
-                  <Text className="text-xs font-bold text-[#2563eb]">
-                    👨‍🏫 instructor@peerreview.dev
-                  </Text>
-                </Pressable>
-
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => {
-                    setValue('email', 'student@peerreview.dev');
-                    setValue('password', 'Password123');
-                  }}
-                  className="rounded-full liquid-glass-pill-active px-3 py-1.5 hover:scale-105 transition-all"
-                >
-                  <Text className="text-xs font-bold text-emerald-700">
-                    🎓 student@peerreview.dev
-                  </Text>
-                </Pressable>
-              </View>
+              {/* Small and inline, so the pills sit at the same weight and
+                  reading order as the hint line directly above them. */}
+              <ButtonGroup
+                size="sm"
+                separated
+                items={[
+                  {
+                    label: 'instructor',
+                    icon: '👨‍🏫',
+                    onPress: () => {
+                      setValue('email', 'instructor@peerreview.dev');
+                      setValue('password', 'Password123');
+                    },
+                  },
+                  {
+                    label: 'student',
+                    icon: '🎓',
+                    onPress: () => {
+                      setValue('email', 'student@peerreview.dev');
+                      setValue('password', 'Password123');
+                    },
+                  },
+                ]}
+              />
             </View>
           </View>
         </View>

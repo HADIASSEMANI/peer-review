@@ -68,7 +68,7 @@ export function DataTable<T>({
               {primary ? (
                 <View className="mb-2 border-b border-hair pb-2">
                   {typeof primary.render(row) === 'string' || typeof primary.render(row) === 'number' ? (
-                    <Text className="text-base font-semibold text-ink text-left cursor-default">{primary.render(row)}</Text>
+                    <Text className="text-lg text-ink text-left cursor-default">{primary.render(row)}</Text>
                   ) : (
                     primary.render(row)
                   )}
@@ -107,7 +107,7 @@ export function DataTable<T>({
               className="border-r border-hair px-3 py-2.5 justify-center min-h-[44px]"
               style={{ flex: col.width ?? 1 }}
             >
-              <Text className="text-xs font-semibold uppercase tracking-wide text-ink text-left">
+              <Text className="text-sm uppercase tracking-wide text-ink text-left">
                 {col.header}
               </Text>
             </View>
@@ -125,7 +125,7 @@ export function DataTable<T>({
               className={[
                 'flex-row items-center border-b border-hair transition-all',
                 selected ? 'liquid-glass-active' : index % 2 === 1 ? 'bg-surface' : 'bg-white',
-                onRowPress ? 'hover:bg-blue-50/50 cursor-pointer' : 'cursor-default',
+                onRowPress ? 'hover:bg-slate-50/50 cursor-pointer' : 'cursor-default',
               ].join(' ')}
             >
               {columns.map((col) => (

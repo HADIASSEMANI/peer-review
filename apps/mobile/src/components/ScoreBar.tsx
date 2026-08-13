@@ -13,7 +13,7 @@ export function ScoreBar({ label, value }: ScoreBarProps) {
     <View className="gap-1.5">
       <View className="flex-row items-baseline justify-between">
         <Text className="text-sm text-ink-700">{label}</Text>
-        <Text className="text-sm font-semibold text-ink-900">
+        <Text className="text-base text-ink-900">
           {score(value)}
           <Text className="text-xs font-normal text-ink-500"> / {RATING_MAX}</Text>
         </Text>

@@ -15,7 +15,7 @@ export function Card({ children, title, subtitle, right, className = '' }: CardP
       {(title || right) && (
         <View className="mb-3 flex-row items-start justify-between gap-3">
           <View className="flex-1">
-            {title ? <Text className="text-base font-semibold text-ink-900">{title}</Text> : null}
+            {title ? <Text className="text-lg text-ink-900">{title}</Text> : null}
             {subtitle ? <Text className="mt-0.5 text-sm text-ink-500">{subtitle}</Text> : null}
           </View>
           {right}

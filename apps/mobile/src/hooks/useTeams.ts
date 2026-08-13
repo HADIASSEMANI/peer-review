@@ -1,4 +1,4 @@
-import type { CreateTeamInput, UpdateTeamInput } from '@repo/types';
+import type { CreateTeamInput, UpdateTeamInput, CreateCourseInput } from '@repo/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { queryKeys } from '../lib/queryClient';
@@ -14,6 +14,14 @@ export const useTeam = (id: string) =>
 
 export const useStudents = (search?: string) =>
   useQuery({ queryKey: queryKeys.students(search), queryFn: () => api.listStudents(search) });
+
+export function useCreateCourse() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateCourseInput) => api.createCourse(input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.courses }),
+  });
+}
 
 export function useCreateTeam() {
   const queryClient = useQueryClient();

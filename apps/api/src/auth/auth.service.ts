@@ -30,6 +30,7 @@ export class AuthService {
         firstName: dto.firstName,
         lastName: dto.lastName,
         studentId: dto.studentId ?? null,
+        organizationId: dto.organizationId ?? 'org1',
         role: dto.role,
       },
     });
@@ -82,6 +83,7 @@ export class AuthService {
     lastName: string;
     studentId: string | null;
     role: string;
+    organizationId?: string;
     createdAt: Date;
   }): PublicUser {
     return {
@@ -91,6 +93,7 @@ export class AuthService {
       lastName: user.lastName,
       studentId: user.studentId,
       role: user.role as Role,
+      organizationId: user.organizationId ?? 'org1',
       createdAt: user.createdAt.toISOString(),
     };
   }

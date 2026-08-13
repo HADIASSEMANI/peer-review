@@ -11,21 +11,20 @@ interface ButtonProps {
   loading?: boolean;
   icon?: ReactNode;
   fullWidth?: boolean;
+  height?: number;
   testID?: string;
 }
 
-const CONTAINER: Record<Variant, string> = {
-  primary: 'bg-brand-600 active:bg-brand-700',
-  secondary: 'bg-white border border-slate-300 active:bg-slate-50',
-  ghost: 'bg-transparent active:bg-slate-100',
-  danger: 'bg-blue-600 active:bg-blue-700',
-};
-
-const LABEL: Record<Variant, string> = {
-  primary: 'text-white',
-  secondary: 'text-ink-900',
-  ghost: 'text-brand-600',
-  danger: 'text-white',
+/**
+ * Same capsule as GradientButton and ButtonGroup. `primary` and `danger` take
+ * the raised accent capsule; `secondary` and `ghost` stay flat in the track, so
+ * two buttons side by side read as a hierarchy without a second hue.
+ */
+const RAISED: Record<Variant, boolean> = {
+  primary: true,
+  danger: true,
+  secondary: false,
+  ghost: false,
 };
 
 export function Button({
@@ -36,27 +35,37 @@ export function Button({
   loading = false,
   icon,
   fullWidth = false,
+  height = 44,
   testID,
 }: ButtonProps) {
   const inactive = disabled || loading;
+  const raised = RAISED[variant];
+
   return (
-    <Pressable
-      testID={testID}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: inactive, busy: loading }}
-      disabled={inactive}
-      onPress={onPress}
+    <View
       className={[
-        'flex-row items-center justify-center gap-2 rounded-xl px-4 h-12',
-        CONTAINER[variant],
-        fullWidth ? 'w-full' : '',
-        inactive ? 'opacity-50' : '',
+        'glass-group flex-row items-center rounded-full p-1',
+        fullWidth ? 'w-full' : 'self-start',
       ].join(' ')}
     >
-      {loading ? <ActivityIndicator size="small" color={variant === 'secondary' ? '#111827' : '#ffffff'} /> : icon}
-      <Text className={`text-base font-semibold ${LABEL[variant]}`}>{label}</Text>
-      <View />
-    </Pressable>
+      <Pressable
+        testID={testID}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ disabled: inactive, busy: loading }}
+        disabled={inactive}
+        onPress={onPress}
+        style={{ height }}
+        className={[
+          'glass-seg flex-1 flex-row items-center justify-center gap-2 rounded-full px-5',
+          raised ? 'glass-seg-active' : '',
+          inactive ? 'opacity-45' : '',
+        ].join(' ')}
+      >
+        {loading ? <ActivityIndicator size="small" color="#0f172a" /> : icon}
+        <Text className={`text-base ${raised ? 'text-ink-900' : 'text-slate-600'}`}>{label}</Text>
+        <View />
+      </Pressable>
+    </View>
   );
 }

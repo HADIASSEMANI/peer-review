@@ -8,7 +8,7 @@ export function Avatar({ user, size = 40 }: { user: PublicUser; size?: number })
       className="items-center justify-center rounded-full bg-brand-100"
       style={{ width: size, height: size }}
     >
-      <Text className="font-semibold text-brand-700" style={{ fontSize: size * 0.36 }}>
+      <Text className="text-brand-700" style={{ fontSize: size * 0.36 }}>
         {initials(user)}
       </Text>
     </View>

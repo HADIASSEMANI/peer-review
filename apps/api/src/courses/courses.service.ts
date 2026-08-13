@@ -8,6 +8,7 @@ type CourseRow = {
   code: string;
   title: string;
   term: string;
+  organizationId: string;
   instructorId: string;
   createdAt: Date;
 };
@@ -17,6 +18,7 @@ const toCourse = (c: CourseRow): Course => ({
   code: c.code,
   title: c.title,
   term: c.term,
+  organizationId: c.organizationId,
   instructorId: c.instructorId,
   createdAt: c.createdAt.toISOString(),
 });
@@ -25,13 +27,34 @@ const toCourse = (c: CourseRow): Course => ({
 export class CoursesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Lists the schools a selector can offer. */
+  async listOrganizations(): Promise<Array<{ id: string; name: string }>> {
+    return this.prisma.organization.findMany({
+      select: { id: true, name: true },
+      orderBy: { name: 'asc' },
+    });
+  }
+
   async create(instructorId: string, dto: CreateCourseDto): Promise<Course> {
     const existing = await this.prisma.course.findUnique({
       where: { code_term: { code: dto.code, term: dto.term } },
     });
     if (existing) throw new ConflictException(`${dto.code} already exists for ${dto.term}`);
 
-    const course = await this.prisma.course.create({ data: { ...dto, instructorId } });
+    // A course belongs to the creating instructor's school unless told otherwise,
+    // so the common case needs no extra input in the form.
+    const instructor = await this.prisma.user.findUnique({
+      where: { id: instructorId },
+      select: { organizationId: true },
+    });
+
+    const course = await this.prisma.course.create({
+      data: {
+        ...dto,
+        organizationId: dto.organizationId ?? instructor?.organizationId ?? 'org1',
+        instructorId,
+      },
+    });
     return toCourse(course);
   }
 

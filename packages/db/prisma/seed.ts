@@ -68,8 +68,28 @@ const COMMENT_POOL = [
   'Kept documentation current, which saved the rest of us time.',
 ];
 
+/** Stable slugs so the client selector and the database agree without mapping. */
+const ORGANIZATIONS = [
+  { id: 'org1', name: 'Concordia University' },
+  { id: 'org2', name: 'McGill University' },
+  { id: 'org3', name: 'Université de Montréal' },
+  { id: 'org4', name: 'Université du Québec à Montréal' },
+  { id: 'org5', name: 'École de technologie supérieure' },
+  { id: 'org6', name: 'Polytechnique Montréal' },
+];
+
 async function main() {
   console.log('Seeding database...');
+
+  // Must come first: users and courses both carry a foreign key to these rows.
+  for (const org of ORGANIZATIONS) {
+    await prisma.organization.upsert({
+      where: { id: org.id },
+      update: { name: org.name },
+      create: org,
+    });
+  }
+  console.log(`  organizations: ${ORGANIZATIONS.length}`);
   const passwordHash = await bcrypt.hash(DEMO_PASSWORD, 10);
 
   const upsertUser = (u: SeedUser) =>
@@ -98,6 +118,7 @@ async function main() {
       code: 'SOEN 341',
       title: 'Software Process',
       term: 'Fall 2026',
+      organizationId: 'org1',
       instructorId: instructor.id,
     },
   });

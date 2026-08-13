@@ -67,8 +67,8 @@ export function TeamDetailScreen({ route, navigation }: Props) {
             }
             className="flex-row items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 py-2 shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all"
           >
-            <Text className="text-xs font-bold text-slate-500">✏</Text>
-            <Text className="text-xs font-semibold text-slate-700">Edit Team</Text>
+            <Text className="text-sm text-slate-500">✏</Text>
+            <Text className="text-sm text-slate-700">Edit Team</Text>
           </Pressable>
           <Pressable
             accessibilityRole="button"
@@ -83,10 +83,10 @@ export function TeamDetailScreen({ route, navigation }: Props) {
                 });
               }
             }}
-            className="flex-row items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/80 px-3.5 py-2 shadow-sm hover:border-blue-300 hover:bg-blue-100/80 transition-all"
+            className="flex-row items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2 shadow-sm hover:border-slate-300 hover:bg-slate-100/80 transition-all"
           >
-            <Text className="text-xs font-bold text-blue-600">🗑</Text>
-            <Text className="text-xs font-semibold text-blue-700">Delete Team</Text>
+            <Text className="text-sm text-slate-700">🗑</Text>
+            <Text className="text-sm text-slate-700">Delete Team</Text>
           </Pressable>
         </View>
       ) : null}
@@ -122,7 +122,7 @@ export function TeamDetailScreen({ route, navigation }: Props) {
               <View className="flex-1 flex-row items-center gap-3">
                 <Avatar user={s.user} size={36} />
                 <View className="flex-1">
-                  <Text className="text-base font-bold text-ink">{fullName(s.user)}</Text>
+                  <Text className="text-lg text-ink">{fullName(s.user)}</Text>
                   <Text className="text-xs text-muted">
                     {s.user.studentId ? `ID ${s.user.studentId} · ` : ''}
                     {s.reviewCount} review{s.reviewCount === 1 ? '' : 's'} received
@@ -147,13 +147,13 @@ export function TeamDetailScreen({ route, navigation }: Props) {
                         deleteUser.mutate(s.user.id);
                       }
                     }}
-                    className="flex-row items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 shadow-xs hover:border-blue-300 hover:bg-blue-100 transition-all"
+                    className="flex-row items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 shadow-xs hover:border-slate-300 hover:bg-slate-100 transition-all"
                   >
-                    <Text className="text-xs font-bold text-blue-600">✕</Text>
-                    <Text className="text-xs font-medium text-blue-700">Remove</Text>
+                    <Text className="text-sm text-slate-700">✕</Text>
+                    <Text className="text-xs font-medium text-slate-700">Remove</Text>
                   </Pressable>
                 ) : null}
-                <Text className="text-sm font-semibold text-[#2563eb]">
+                <Text className="text-base text-[#15803d]">
                   {isExpanded ? '▲' : '▼'}
                 </Text>
               </View>
@@ -171,13 +171,13 @@ export function TeamDetailScreen({ route, navigation }: Props) {
 
                 {s.comments.length > 0 ? (
                   <View className="gap-2 border-t border-slate-200 pt-3">
-                    <Text className="text-sm font-semibold text-ink-900">Anonymous comments</Text>
+                    <Text className="text-base text-ink-900">Anonymous comments</Text>
                     {s.comments.map((comment, index) => (
                       <View
                         key={`${index}-${comment.text.slice(0, 12)}`}
                         className="gap-0.5 rounded-xl bg-slate-50 px-3 py-2"
                       >
-                        <Text className="text-xs font-semibold uppercase tracking-wide text-muted">
+                        <Text className="text-sm uppercase tracking-wide text-muted">
                           {DIMENSION_LABELS[comment.dimension]}
                         </Text>
                         <Text className="text-sm leading-5 text-ink">{comment.text}</Text>

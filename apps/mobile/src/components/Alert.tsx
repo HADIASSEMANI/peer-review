@@ -11,13 +11,13 @@ interface AlertProps {
 export function Alert({ title, children, tone = 'danger', onClose }: AlertProps) {
   const palette =
     tone === 'danger'
-      ? { box: 'border-blue-300 bg-blue-50', title: 'text-blue-800', body: 'text-blue-700' }
+      ? { box: 'border-slate-300 bg-slate-50', title: 'text-slate-800', body: 'text-slate-700' }
       : { box: 'border-primary/30 bg-primary-soft', title: 'text-primary', body: 'text-ink' };
 
   return (
     <View className={`flex-row gap-3 rounded-md border px-4 py-3 ${palette.box}`}>
       <View className="flex-1 gap-1">
-        <Text className={`text-sm font-semibold ${palette.title}`}>{title}</Text>
+        <Text className={`text-base ${palette.title}`}>{title}</Text>
         <Text className={`text-sm ${palette.body}`}>{children}</Text>
       </View>
       {onClose ? (

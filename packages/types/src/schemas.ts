@@ -36,6 +36,7 @@ export const registerSchema = z
     firstName: z.string().min(1, 'Required').max(60),
     lastName: z.string().min(1, 'Required').max(60),
     studentId: z.string().max(20).optional(),
+    organizationId: z.string().min(1, 'Select an organization').default('org1'),
     role: roleSchema.default(Role.STUDENT),
   })
   .refine((v) => v.password === v.confirmPassword, {
@@ -55,6 +56,7 @@ export const publicUserSchema = z.object({
   lastName: z.string(),
   studentId: z.string().nullable(),
   role: roleSchema,
+  organizationId: z.string(),
   createdAt: z.string(),
 });
 export type PublicUser = z.infer<typeof publicUserSchema>;
@@ -84,15 +86,24 @@ export type JwtPayload = z.infer<typeof jwtPayloadSchema>;
 /* Courses & teams                                                             */
 /* -------------------------------------------------------------------------- */
 
+export const organizationSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+export type Organization = z.infer<typeof organizationSchema>;
+
 export const createCourseSchema = z.object({
   code: z.string().min(2, 'Required').max(20),
   title: z.string().min(2, 'Required').max(120),
   term: z.string().min(2, 'Required').max(40),
+  /** Defaults to the creating instructor's own organization. */
+  organizationId: z.string().min(1).optional(),
 });
 export type CreateCourseInput = z.infer<typeof createCourseSchema>;
 
 export const courseSchema = createCourseSchema.extend({
   id: idSchema,
+  organizationId: z.string(),
   instructorId: idSchema,
   createdAt: z.string(),
 });
@@ -101,6 +112,7 @@ export type Course = z.infer<typeof courseSchema>;
 export const createTeamSchema = z.object({
   name: z.string().min(2, 'Team name is required').max(80),
   courseId: idSchema,
+  maxSize: z.number().int().min(2, 'At least 2').max(50, 'At most 50').optional(),
   memberIds: z.array(idSchema).default([]),
 });
 export type CreateTeamInput = z.infer<typeof createTeamSchema>;
@@ -225,7 +237,12 @@ export const teamSummarySchema = z.object({
   teamName: z.string(),
   courseCode: z.string(),
   memberCount: z.number().int(),
-  /** Ratio of submitted evaluations to expected (n * (n-1)). */
+  maxSize: z.number().nullable(),
+  /** Evaluations actually submitted for this team. */
+  submittedCount: z.number().int(),
+  /** n * (n-1) — everyone reviews everyone but themselves. */
+  expectedCount: z.number().int(),
+  /** Ratio of submitted evaluations to expected. */
   completionRate: z.number(),
   averages: dimensionAverageSchema,
   overall: z.number(),

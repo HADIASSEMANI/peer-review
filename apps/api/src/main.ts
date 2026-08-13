@@ -34,8 +34,17 @@ async function bootstrap(): Promise<void> {
       contentSecurityPolicy: false,
     }),
   );
+  // CORS_ORIGIN may be a comma-separated allowlist or "*". An array of ["*"]
+  // is NOT treated as a wildcard by the cors package, so it has to be passed
+  // through as the bare string or every deployed request is rejected.
+  const corsOrigin = process.env.CORS_ORIGIN?.trim();
   app.enableCors({
-    origin: process.env.CORS_ORIGIN?.split(',') ?? ['http://localhost:5173'],
+    origin:
+      !corsOrigin || corsOrigin === '*'
+        ? true
+        : corsOrigin.split(',').map((o) => o.trim()),
+    // `credentials` cannot be combined with a literal "*" origin; reflecting
+    // the request origin (origin: true) keeps cookies working either way.
     credentials: true,
   });
   app.setGlobalPrefix('api');
@@ -46,9 +55,13 @@ async function bootstrap(): Promise<void> {
   const document = SwaggerModule.createDocument(app, buildSwaggerConfig());
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = Number(process.env.API_PORT ?? 3001);
-  await app.listen(port);
-  new Logger('Bootstrap').log(`API on http://localhost:${port}/api  (docs: /api/docs)`);
+  // Render (and most PaaS) inject the port to bind as PORT and route to it.
+  // API_PORT stays as the local-dev override.
+  const port = Number(process.env.PORT ?? process.env.API_PORT ?? 3001);
+  // Must bind 0.0.0.0, not localhost — Render's proxy reaches the container
+  // from outside, and a localhost-bound server fails its health check.
+  await app.listen(port, '0.0.0.0');
+  new Logger('Bootstrap').log(`API listening on port ${port} (docs: /api/docs)`);
 }
 
 void bootstrap();

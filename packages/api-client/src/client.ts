@@ -1,6 +1,7 @@
 import {
   authResponseSchema,
   courseSchema,
+  organizationSchema,
   evaluationTargetSchema,
   myFeedbackSchema,
   publicUserSchema,
@@ -8,6 +9,7 @@ import {
   teamSummarySchema,
   type AuthResponse,
   type Course,
+  type Organization,
   type CreateCourseInput,
   type CreateTeamInput,
   type EvaluationTarget,
@@ -141,6 +143,12 @@ export class ApiClient {
   }
 
   /* -- courses ------------------------------------------------------------- */
+
+  listOrganizations(): Promise<Organization[]> {
+    return this.request('/courses/organizations', {
+      schema: z.array(organizationSchema),
+    });
+  }
 
   listCourses(): Promise<Course[]> {
     return this.request('/courses', { schema: z.array(courseSchema) });

@@ -73,11 +73,16 @@ export class TeamsService {
     if (duplicate) throw new ConflictException(`"${dto.name}" already exists in this course`);
 
     await this.assertAllAreStudents(dto.memberIds);
+    await this.assertNotAlreadyOnACourseTeam(dto.courseId, dto.memberIds);
+    if (dto.maxSize && dto.memberIds.length > dto.maxSize) {
+      throw new BadRequestException(`That roster exceeds the team's maximum size of ${dto.maxSize}`);
+    }
 
     const team = await this.prisma.team.create({
       data: {
         name: dto.name,
         courseId: dto.courseId,
+        maxSize: dto.maxSize ?? null,
         members: { create: dto.memberIds.map((userId) => ({ userId })) },
       },
       include: teamInclude,
@@ -111,8 +116,12 @@ export class TeamsService {
   }
 
   async update(id: string, instructorId: string, dto: UpdateTeamDto): Promise<Team> {
-    await this.assertInstructorOwnsTeam(id, instructorId);
-    if (dto.memberIds) await this.assertAllAreStudents(dto.memberIds);
+    const existing = await this.assertInstructorOwnsTeam(id, instructorId);
+    if (dto.memberIds) {
+      await this.assertAllAreStudents(dto.memberIds);
+      // Exclude this team, otherwise its own current members would trip the check.
+      await this.assertNotAlreadyOnACourseTeam(existing.courseId, dto.memberIds, id);
+    }
 
     const team = await this.prisma.team.update({
       where: { id },
@@ -135,7 +144,7 @@ export class TeamsService {
     return { id };
   }
 
-  private async assertInstructorOwnsTeam(teamId: string, instructorId: string): Promise<void> {
+  private async assertInstructorOwnsTeam(teamId: string, instructorId: string) {
     const team = await this.prisma.team.findUnique({
       where: { id: teamId },
       include: { course: true },
@@ -143,6 +152,40 @@ export class TeamsService {
     if (!team) throw new NotFoundException('Team not found');
     if (team.course.instructorId !== instructorId) {
       throw new ForbiddenException('You do not own this course');
+    }
+    return team;
+  }
+
+  /**
+   * A student belongs to at most one team per course. The database's unique
+   * constraint is per (team, user), which would happily allow the same student
+   * on two teams of the same course, so the rule is enforced here.
+   */
+  private async assertNotAlreadyOnACourseTeam(
+    courseId: string,
+    memberIds: string[],
+    excludeTeamId?: string,
+  ): Promise<void> {
+    if (memberIds.length === 0) return;
+
+    const clashes = await this.prisma.teamMember.findMany({
+      where: {
+        userId: { in: memberIds },
+        team: { courseId, ...(excludeTeamId ? { id: { not: excludeTeamId } } : {}) },
+      },
+      include: {
+        user: { select: { firstName: true, lastName: true } },
+        team: { select: { name: true } },
+      },
+    });
+
+    if (clashes.length > 0) {
+      const detail = clashes
+        .map((c) => `${c.user.firstName} ${c.user.lastName} is already on ${c.team.name}`)
+        .join('; ');
+      throw new BadRequestException(
+        `A student can only belong to one team per course. ${detail}.`,
+      );
     }
   }
 

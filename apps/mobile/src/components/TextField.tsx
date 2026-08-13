@@ -15,6 +15,8 @@ interface TextFieldProps {
   testID?: string;
   editable?: boolean;
   className?: string;
+  /** Fired when Enter is pressed in a single-line field. */
+  onSubmitEditing?: () => void;
 }
 
 /**
@@ -36,13 +38,14 @@ export function TextField({
   testID,
   editable = true,
   className,
+  onSubmitEditing,
 }: TextFieldProps) {
   return (
     <View className={['w-full gap-2', className].filter(Boolean).join(' ')}>
       {label ? (
-        <Text className="text-xs font-bold uppercase tracking-wider text-[#2563eb]">
+        <Text className="text-base text-ink-700">
           {label}
-          {required ? <Text className="text-blue-600"> *</Text> : null}
+          {required ? <Text className="text-amber-600"> *</Text> : null}
         </Text>
       ) : null}
       <TextInput
@@ -58,12 +61,20 @@ export function TextField({
         multiline={multiline}
         numberOfLines={numberOfLines}
         editable={editable}
+        // Enter submits. Multiline fields keep Enter for newlines.
+        onSubmitEditing={multiline ? undefined : onSubmitEditing}
+        blurOnSubmit={!multiline}
+        returnKeyType={multiline ? undefined : 'go'}
         className={[
           'rounded-xl border bg-white px-3.5 py-3 text-base text-ink placeholder:text-muted focus:border-brand-500 focus:bg-white',
-          error ? 'border-blue-500' : 'border-divider',
+          error ? 'border-amber-500' : 'border-divider',
         ].join(' ')}
       />
-      {error ? <Text className="text-xs text-blue-600">{error}</Text> : null}
+      {/* Fixed-height slot: the message appears and disappears without moving
+          anything below it, which otherwise makes the whole form jump. */}
+      <View className="h-5 justify-center">
+        {error ? <Text className="text-sm text-amber-700">{error}</Text> : null}
+      </View>
     </View>
   );
 }

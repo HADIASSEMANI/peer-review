@@ -7,10 +7,14 @@ export default {
       colors: {
         // ink is the crisp slate dark blue used for body copy and headings.
         ink: '#0f172a',
+        // Accent grading: rgb(64,192,87) -> rgb(21,170,191). `deep` is the
+        // text-safe stop; the two bright stops are for fills and glow, which
+        // do not need to clear text contrast on white.
         primary: {
-          DEFAULT: '#2563eb',
-          soft: '#eff6ff',
-          deep: '#042a7d',
+          DEFAULT: '#40c057',
+          soft: '#ecfdf5',
+          deep: '#15803d',
+          cyan: '#15aabf',
         },
         cyan: { DEFAULT: '#15aabf' },
         grass: { DEFAULT: '#40c057' },

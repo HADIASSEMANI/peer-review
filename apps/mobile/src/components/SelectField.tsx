@@ -28,14 +28,14 @@ export function SelectField({
 }: SelectFieldProps) {
   return (
     <View className="w-full gap-2">
-      <Text className="text-sm font-semibold text-ink">
+      <Text className="text-base text-ink">
         {label}
-        {required ? <Text className="text-blue-600"> *</Text> : null}
+        {required ? <Text className="text-amber-600"> *</Text> : null}
       </Text>
       <View
         className={[
           'w-full rounded-lg border bg-white px-3 h-12 justify-center',
-          error ? 'border-blue-500' : 'border-divider',
+          error ? 'border-slate-400' : 'border-divider',
         ].join(' ')}
       >
         <select
@@ -64,7 +64,9 @@ export function SelectField({
           ))}
         </select>
       </View>
-      {error ? <Text className="text-xs text-blue-600">{error}</Text> : null}
+      <View className="h-5 justify-center">
+        {error ? <Text className="text-sm text-amber-700">{error}</Text> : null}
+      </View>
     </View>
   );
 }

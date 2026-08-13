@@ -7,6 +7,7 @@ import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { RolesGuard } from './common/roles.guard';
 import { CoursesModule } from './courses/courses.module';
 import { EvaluationsModule } from './evaluations/evaluations.module';
+import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { TeamsModule } from './teams/teams.module';
 import { UsersModule } from './users/users.module';
@@ -27,6 +28,7 @@ import { UsersModule } from './users/users.module';
     CoursesModule,
     TeamsModule,
     EvaluationsModule,
+    HealthModule,
   ],
   providers: [
     // Everything is authenticated unless a route is marked @Public().

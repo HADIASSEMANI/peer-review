@@ -38,7 +38,7 @@ function IntroPanel() {
   const [open, setOpen] = useState(false);
 
   return (
-    <View className="rounded-2xl border border-blue-200/80 bg-gradient-to-br from-blue-50/90 via-indigo-50/40 to-white p-5 shadow-xs">
+    <View className="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50/90 via-slate-100/40 to-white p-5 shadow-xs">
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
@@ -46,23 +46,23 @@ function IntroPanel() {
         className="flex-row items-center justify-between"
       >
         <View className="flex-row items-center gap-3">
-          <View className="h-9 w-9 items-center justify-center rounded-xl bg-[#2563eb] shadow-xs">
+          <View className="h-9 w-9 items-center justify-center rounded-xl bg-[#15803d] shadow-xs">
             <Text className="text-lg">📋</Text>
           </View>
           <View>
-            <Text className="text-base font-bold text-ink-900">Peer Evaluation Instructions</Text>
+            <Text className="text-lg text-ink-900">Peer Evaluation Instructions</Text>
             <Text className="text-xs font-medium text-slate-500">
               {open ? 'Click to collapse guidelines' : 'Click to view rating criteria & confidentiality policy'}
             </Text>
           </View>
         </View>
-        <View className="h-7 w-7 items-center justify-center rounded-lg border border-blue-200 bg-white">
-          <Text className="text-xs font-bold text-[#2563eb]">{open ? '▲' : '▼'}</Text>
+        <View className="h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white">
+          <Text className="text-sm text-[#15803d]">{open ? '▲' : '▼'}</Text>
         </View>
       </Pressable>
 
       {open ? (
-        <View className="mt-4 gap-3 border-t border-blue-100 pt-3">
+        <View className="mt-4 gap-3 border-t border-slate-100 pt-3">
           <Text className="text-sm leading-6 text-slate-700">
             Rate each of your teammates across four core criteria on a scale of 1 to {RATING_MAX}.
             Submissions are confidential and help build fair team assessment averages.
@@ -70,17 +70,17 @@ function IntroPanel() {
 
           <View className="gap-2.5">
             {EVAL_DIMENSIONS.map((d) => (
-              <View key={d} className="flex-row items-start gap-2.5 rounded-xl border border-blue-100/80 bg-white/80 p-3">
+              <View key={d} className="flex-row items-start gap-2.5 rounded-xl border border-slate-100/80 bg-white/80 p-3">
                 <Text className="text-base">{DIMENSION_ICONS[d]}</Text>
                 <View className="flex-1">
-                  <Text className="text-xs font-bold text-ink-900">{DIMENSION_LABELS[d]}</Text>
+                  <Text className="text-sm text-ink-900">{DIMENSION_LABELS[d]}</Text>
                   <Text className="mt-0.5 text-xs text-slate-600">{DIMENSION_DESCRIPTIONS[d]}</Text>
                 </View>
               </View>
             ))}
           </View>
 
-          <Text className="text-xs font-semibold leading-5 text-slate-600">
+          <Text className="text-sm leading-5 text-slate-600">
             💡 All 4 numeric ratings are required per teammate before submitting. Written comments are optional but encouraged.
           </Text>
         </View>
@@ -190,11 +190,11 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
             onPress={() => navigation.goBack()}
             className="h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all"
           >
-            <Text className="text-xl font-extrabold text-[#2563eb]">←</Text>
+            <Text className="text-2xl text-[#15803d]">←</Text>
           </Pressable>
 
-          <View className="flex-row items-center gap-2 rounded-full border border-blue-200 bg-blue-50/80 px-3.5 py-1.5 shadow-xs">
-            <Text className="text-xs font-bold text-[#2563eb]">
+          <View className="flex-row items-center gap-2 rounded-full border border-slate-200 bg-slate-50/80 px-3.5 py-1.5 shadow-xs">
+            <Text className="text-sm text-[#15803d]">
               {completedCount} / {totalTeammates} Teammates Completed ({progressPercent}%)
             </Text>
           </View>
@@ -202,10 +202,10 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
 
         {/* Title & Progress Bar */}
         <View className="gap-2">
-          <Text className="text-2xl font-extrabold text-ink-900">{teamName} · Peer Assessment</Text>
+          <Text className="text-3xl text-ink-900">{teamName} · Peer Assessment</Text>
           <View className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
             <View
-              className="h-full rounded-full bg-gradient-to-r from-[#2563eb] to-[#15aabf] transition-all"
+              className="h-full rounded-full bg-gradient-to-r from-[#15803d] to-slate-200 transition-all"
               style={{ width: `${progressPercent}%` }}
             />
           </View>
@@ -216,7 +216,7 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
 
         {/* Teammate Stepper Tabs */}
         <View className="gap-2">
-          <Text className="text-xs font-bold uppercase tracking-wider text-slate-500">
+          <Text className="text-sm uppercase tracking-wider text-slate-500">
             Select Teammate to Evaluate:
           </Text>
           <View className="flex-row flex-wrap gap-2">
@@ -238,17 +238,17 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
                   className={[
                     'flex-row items-center gap-2.5 rounded-2xl px-4 py-2.5 transition-all shadow-xs',
                     selected
-                      ? 'liquid-glass-pill-active scale-105 border-blue-500'
+                      ? 'liquid-glass-pill-active scale-105 border-slate-400'
                       : 'border border-slate-200 bg-white hover:bg-slate-50',
                   ].join(' ')}
                 >
                   <Avatar user={target.user} size={28} />
-                  <Text className={selected ? 'text-sm font-bold text-[#2563eb]' : 'text-sm font-semibold text-slate-700'}>
+                  <Text className={selected ? 'text-base text-[#15803d]' : 'text-base text-slate-700'}>
                     {fullName(target.user)}
                   </Text>
                   {isDone ? (
-                    <View className="h-5 w-5 items-center justify-center rounded-full bg-emerald-500">
-                      <Text className="text-[10px] font-extrabold text-white">✓</Text>
+                    <View className="h-5 w-5 items-center justify-center rounded-full bg-slate-500">
+                      <Text className="text-xs text-white">✓</Text>
                     </View>
                   ) : null}
                 </Pressable>
@@ -270,7 +270,7 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
                 <View className="flex-row items-center gap-3.5">
                   <Avatar user={target.user} size={48} />
                   <View>
-                    <Text className="text-xl font-extrabold text-ink-900">{fullName(target.user)}</Text>
+                    <Text className="text-2xl text-ink-900">{fullName(target.user)}</Text>
                     <Text className="text-xs font-medium text-slate-500">
                       {target.user.studentId ? `Student ID: ${target.user.studentId}` : target.user.email}
                     </Text>
@@ -291,7 +291,7 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
                   >
                     <View className="flex-row items-center gap-2">
                       <Text className="text-lg">{DIMENSION_ICONS[dimension]}</Text>
-                      <Text className="text-base font-bold text-ink-900">
+                      <Text className="text-lg text-ink-900">
                         {DIMENSION_LABELS[dimension]}
                       </Text>
                     </View>
@@ -340,20 +340,20 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
                     activeTeammateIndex === 0 ? 'opacity-40' : 'hover:bg-slate-50',
                   ].join(' ')}
                 >
-                  <Text className="text-sm font-bold text-slate-700">← Previous Teammate</Text>
+                  <Text className="text-base text-slate-700">← Previous Teammate</Text>
                 </Pressable>
 
                 {activeTeammateIndex < totalTeammates - 1 ? (
                   <Pressable
                     accessibilityRole="button"
                     onPress={() => setActiveTeammateIndex((prev) => Math.min(totalTeammates - 1, prev + 1))}
-                    className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 hover:bg-blue-100 transition-all"
+                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 hover:bg-slate-100 transition-all"
                   >
-                    <Text className="text-sm font-bold text-[#2563eb]">Next Teammate →</Text>
+                    <Text className="text-base text-[#15803d]">Next Teammate →</Text>
                   </Pressable>
                 ) : (
-                  <View className="rounded-full bg-emerald-50 px-3.5 py-1.5 border border-emerald-200">
-                    <Text className="text-xs font-bold text-emerald-700">✓ All Teammates Reviewed</Text>
+                  <View className="rounded-full bg-slate-50 px-3.5 py-1.5 border border-slate-200">
+                    <Text className="text-sm text-slate-700">✓ All Teammates Reviewed</Text>
                   </View>
                 )}
               </View>
@@ -381,7 +381,7 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
               isCompact ? 'w-full' : 'flex-1'
             }`}
           >
-            <Text className="text-base font-semibold text-slate-700">Cancel</Text>
+            <Text className="text-lg text-slate-700">Cancel</Text>
           </Pressable>
         </View>
       </View>

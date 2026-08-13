@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { ORGANIZATIONS, orgLabel } from '../lib/orgs';
 import { useLogout } from '../hooks/useAuth';
 import { useAuthStore } from '../store/auth';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -15,14 +16,6 @@ const ORG_REVERSE_MAP: Record<string, string> = {
   org6: 'Polytechnique Montréal',
 };
 
-const INSTRUCTOR_ORGS = [
-  { label: 'Concordia University', value: 'org1' },
-  { label: 'McGill University', value: 'org2' },
-  { label: 'Université de Montréal', value: 'org3' },
-  { label: 'Université du Québec à Montréal', value: 'org4' },
-  { label: 'École de technologie supérieure', value: 'org5' },
-  { label: 'Polytechnique Montréal', value: 'org6' },
-];
 
 function Header() {
   const user = useAuthStore((s) => s.user);
@@ -38,12 +31,15 @@ function Header() {
       <View className="flex-row items-center py-2">
         {signedIn ? (
           <View className="flex-row items-center gap-3 sm:gap-4">
-            <Image
-              source={{ uri: '/team-logo.svg' }}
-              accessibilityLabel="Team logo"
-              style={{ width: isTiny ? 80 : 105, height: 40 }}
-              resizeMode="contain"
-            />
+            {/* Instructors get a school switcher; students get the same chip
+                rendered as static text, since they belong to one school and
+                have nothing to switch between. Neither shows the team logo. */}
+            {!isInstructor ? (
+              <View className="flex-row items-center rounded-lg border border-[#d3d3d3] bg-[#f8f9fa] px-3 py-1.5 shadow-sm">
+                <Text className="mr-2 text-sm">🏫</Text>
+                <Text className="text-base text-ink">{orgLabel(user?.organizationId)}</Text>
+              </View>
+            ) : null}
             {isInstructor ? (
               <View className="hidden sm:flex flex-row items-center rounded-lg border border-[#d3d3d3] bg-[#f8f9fa] px-3 py-1.5 shadow-sm">
                 <Text className="mr-2 text-sm">🏫</Text>
@@ -61,7 +57,7 @@ function Header() {
                     outline: 'none',
                   }}
                 >
-                  {INSTRUCTOR_ORGS.map((org) => (
+                  {ORGANIZATIONS.map((org) => (
                     <option key={org.value} value={org.value} style={{ color: '#0f172a' }}>
                       {org.label}
                     </option>
@@ -101,7 +97,7 @@ function Header() {
             <Pressable
               accessibilityRole="button"
               onPress={() => void logout()}
-              className="ml-2 rounded-md border border-[#d3d3d3] bg-[#f8f9fa] px-3.5 py-1.5 hover:bg-[#eff6ff]"
+              className="ml-2 rounded-md border border-[#d3d3d3] bg-[#f8f9fa] px-3.5 py-1.5 hover:bg-slate-100"
             >
               <Text className="text-sm font-medium text-ink">Logout</Text>
             </Pressable>

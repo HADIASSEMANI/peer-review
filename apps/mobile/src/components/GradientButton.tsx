@@ -1,62 +1,65 @@
-import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, Text, View, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-type Tone = 'blue' | 'green';
-
-const TONES: Record<Tone, { from: string; to: string; solid: string }> = {
-  blue: { from: '#2563eb', to: '#15aabf', solid: '#2563eb' },
-  green: { from: '#40c057', to: '#15aabf', solid: '#40c057' },
-};
+type Tone = 'blue' | 'green' | 'ghost';
 
 interface GradientButtonProps {
   label: string;
   onPress: () => void;
+  /**
+   * `blue` and `green` both render the accent capsule — kept as aliases so
+   * existing call sites need no edit. `ghost` is the quiet variant.
+   */
   tone?: Tone;
   disabled?: boolean;
   loading?: boolean;
   fullWidth?: boolean;
-  leftSection?: ReactNode;
-  testID?: string;
   height?: number;
+  testID?: string;
 }
 
+/**
+ * A standalone action, built from the same track + capsule structure as
+ * ButtonGroup so a lone button and a segmented pair are visually identical.
+ * The glass treatment lives entirely in global.css; nothing here re-derives it.
+ */
 export function GradientButton({
   label,
   onPress,
-  tone = 'blue',
+  tone = 'green',
   disabled = false,
   loading = false,
   fullWidth = true,
-  leftSection,
-  testID,
   height = 48,
+  testID,
 }: GradientButtonProps) {
   const inactive = disabled || loading;
-  const c = TONES[tone];
+  const quiet = tone === 'ghost';
 
   return (
-    <Pressable
-      testID={testID}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: inactive, busy: loading }}
-      disabled={inactive}
-      onPress={onPress}
-      style={
-        {
-          backgroundColor: c.solid,
-          backgroundImage: `linear-gradient(90deg, ${c.from}, ${c.to})`,
-          opacity: inactive ? 0.6 : 1,
-          height,
-        } as ViewStyle
-      }
-      className={`flex-row items-center justify-center gap-2 rounded-xl px-4 ${
-        fullWidth ? 'w-full' : 'self-center'
-      }`}
+    <View
+      className={[
+        'glass-group flex-row items-center rounded-full p-1',
+        fullWidth ? 'w-full' : 'self-start',
+      ].join(' ')}
     >
-      {loading ? <ActivityIndicator size="small" color="#ffffff" /> : null}
-      {!loading && leftSection ? <View>{leftSection}</View> : null}
-      <Text className="text-center text-base font-semibold text-white">{label}</Text>
-    </Pressable>
+      <Pressable
+        testID={testID}
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ disabled: inactive, busy: loading }}
+        disabled={inactive}
+        onPress={onPress}
+        style={{ height }}
+        className={[
+          'glass-seg flex-1 flex-row items-center justify-center gap-2 rounded-full px-5',
+          quiet ? '' : 'glass-seg-active',
+          inactive ? 'opacity-45' : '',
+        ].join(' ')}
+      >
+        {loading ? <ActivityIndicator size="small" color="#0f172a" /> : null}
+        <Text className={`text-base ${quiet ? 'text-slate-600' : 'text-ink-900'}`}>{label}</Text>
+        <View />
+      </Pressable>
+    </View>
   );
 }

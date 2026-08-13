@@ -63,7 +63,7 @@ export function MyFeedbackScreen({ route }: Props) {
                 key={`${index}-${comment.text.slice(0, 12)}`}
                 className="gap-1 rounded-md border border-[#ccc] bg-white p-4"
               >
-                <Text className="text-center text-xs font-semibold uppercase tracking-wide text-muted">
+                <Text className="text-center text-sm uppercase tracking-wide text-muted">
                   {DIMENSION_LABELS[comment.dimension]}
                 </Text>
                 <Text className="text-center text-base text-quiet">{comment.text}</Text>

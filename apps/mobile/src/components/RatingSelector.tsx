@@ -30,12 +30,12 @@ export function RatingSelector({ label, description, value, onChange, error }: R
     <View className="gap-2.5">
       <View className="flex-row items-center justify-between gap-2">
         <View className="flex-1">
-          <Text className="text-sm font-bold text-ink-900">{label}</Text>
+          <Text className="text-base text-ink-900">{label}</Text>
           {description ? <Text className="mt-0.5 text-xs text-ink-500">{description}</Text> : null}
         </View>
         {value ? (
-          <View className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 shadow-xs">
-            <Text className="text-xs font-bold text-[#2563eb]">{DESCRIPTORS[value]}</Text>
+          <View className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 shadow-xs">
+            <Text className="text-sm text-[#15803d]">{DESCRIPTORS[value]}</Text>
           </View>
         ) : null}
       </View>
@@ -55,7 +55,7 @@ export function RatingSelector({ label, description, value, onChange, error }: R
                 selected ? 'liquid-glass-pill-active scale-105 shadow-md' : 'border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50',
               ].join(' ')}
             >
-              <Text className={selected ? 'text-base font-extrabold text-[#2563eb]' : 'text-sm font-semibold text-slate-700'}>{n}</Text>
+              <Text className={selected ? 'text-lg text-[#15803d]' : 'text-base text-slate-700'}>{n}</Text>
             </Pressable>
           );
         })}
@@ -67,7 +67,9 @@ export function RatingSelector({ label, description, value, onChange, error }: R
         <Text className="text-xs font-medium text-slate-500">7 (Exceptional)</Text>
       </View>
 
-      {error ? <Text className="text-xs font-medium text-blue-600">{error}</Text> : null}
+      <View className="h-5 justify-center">
+        {error ? <Text className="text-sm text-amber-700">{error}</Text> : null}
+      </View>
     </View>
   );
 }

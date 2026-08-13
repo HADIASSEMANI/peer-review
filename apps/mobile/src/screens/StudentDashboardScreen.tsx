@@ -26,6 +26,13 @@ type Tab = 'My Teams' | 'Submissions' | 'Feedback';
 
 const TABS: Tab[] = ['My Teams', 'Submissions', 'Feedback'];
 
+/** Emoji + label per tab, matching the instructor dashboard's segmented control. */
+const TAB_EMOJI: Record<Tab, string> = {
+  'My Teams': '👥',
+  Submissions: '📝',
+  Feedback: '💬',
+};
+
 /** Compact criterion labels for the dense comments cell. */
 const SHORT_LABEL: Record<EvalDimension, string> = {
   [EvalDimension.COOPERATION]: 'Cooperation',
@@ -63,6 +70,14 @@ export function StudentDashboardScreen({ navigation }: Props) {
   const feedback = useMyFeedback();
 
   const selectedTeam = currentTeamId ? (teams.data?.find((t) => t.id === currentTeamId) ?? null) : null;
+
+  const tabCounts: Record<Tab, number | null> = {
+    'My Teams': teams.data?.length ?? null,
+    Submissions: currentTeamId
+      ? ((targets.data ?? []).filter((t) => t.submitted).length ?? null)
+      : null,
+    Feedback: feedback.data?.comments.length ?? null,
+  };
 
   const teamColumns = useMemo<Array<Column<Team>>>(
     () => [
@@ -103,7 +118,7 @@ export function StudentDashboardScreen({ navigation }: Props) {
           <View className="gap-0.5">
             {EVAL_DIMENSIONS.map((d) => (
               <Text key={d} className="text-sm text-ink">
-                <Text className="font-semibold">{SHORT_LABEL[d]}:</Text>{' '}
+                <Text className="">{SHORT_LABEL[d]}:</Text>{' '}
                 {t.existingComments?.[d]?.trim() || 'No comment'}
               </Text>
             ))}
@@ -136,7 +151,7 @@ export function StudentDashboardScreen({ navigation }: Props) {
     <AppShell>
       <View className="mx-auto w-full max-w-5xl gap-5">
         <View className="gap-1">
-          <Text className="text-2xl font-bold text-ink">
+          <Text className="text-3xl text-ink">
             Welcome{user ? `, ${user.firstName}` : ''}
           </Text>
           <Text className="text-sm text-muted">
@@ -151,12 +166,13 @@ export function StudentDashboardScreen({ navigation }: Props) {
           <View
             className={`${
               isCompact
-                ? 'w-full flex-row justify-around border-b border-hair bg-[#f8f9fa] p-2 rounded-lg'
-                : 'w-56 flex-col bg-[#f8f9fa] p-3 rounded-lg border border-hair gap-1'
+                ? 'w-full flex-row justify-around gap-2 rounded-xl bg-slate-100 p-1'
+                : 'w-56 flex-col gap-1 rounded-xl bg-slate-100 p-1.5'
             }`}
           >
             {TABS.map((tab) => {
               const on = tab === active;
+              const count = tabCounts[tab];
               return (
                 <Pressable
                   key={tab}
@@ -164,13 +180,20 @@ export function StudentDashboardScreen({ navigation }: Props) {
                   accessibilityState={{ selected: on }}
                   onPress={() => setActive(tab)}
                   className={[
-                    'rounded-md px-4 py-3 flex-row items-center gap-2 transition-all',
+                    'rounded-lg px-4 py-2.5 flex-row items-center gap-2 transition-all',
                     isCompact ? 'flex-1 justify-center' : 'w-full',
                     on ? 'liquid-glass-pill-active' : 'bg-transparent hover:bg-slate-100',
                   ].join(' ')}
                 >
-                  <Text className={on ? 'text-base font-semibold text-[#2563eb]' : 'text-base font-medium text-slate-700'}>
-                    {tab}
+                  <Text
+                    className={
+                      on
+                        ? 'text-base text-[#15803d]'
+                        : 'text-sm font-medium text-slate-600'
+                    }
+                  >
+                    {TAB_EMOJI[tab]} {tab}
+                    {count === null ? '' : ` (${count})`}
                   </Text>
                 </Pressable>
               );
@@ -191,8 +214,8 @@ export function StudentDashboardScreen({ navigation }: Props) {
                 />
 
                 {selectedTeam ? (
-                  <View className="gap-4 rounded-lg border border-hair bg-white p-5 shadow-card">
-                    <Text className="text-lg font-bold text-ink">
+                  <View className="gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
+                    <Text className="text-xl text-ink">
                       {selectedTeam.name} — Teammates
                     </Text>
                     <View className="gap-2 pl-2">
@@ -248,7 +271,7 @@ export function StudentDashboardScreen({ navigation }: Props) {
 
             {active === 'Feedback' ? (
               <View className="mx-auto w-full max-w-[700px] gap-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-card sm:p-10">
-                <Text className="text-center text-[32px] font-extrabold text-ink">Peer Feedback</Text>
+                <Text className="text-center text-[32px] text-ink">Peer Feedback</Text>
 
                 {feedback.data && feedback.data.reviewCount > 0 ? (
                   <>
@@ -276,14 +299,14 @@ export function StudentDashboardScreen({ navigation }: Props) {
                               onPress={() => toggleFeedback(index)}
                               className="flex-row items-center justify-between gap-3"
                             >
-                              <Text className="text-xs font-bold uppercase tracking-wide text-[#2563eb]">
+                              <Text className="text-sm uppercase tracking-wide text-[#15803d]">
                                 {DIMENSION_LABELS[comment.dimension]}
                               </Text>
                               <View className="flex-row items-center gap-2">
                                 <Text className="text-xs text-muted">
                                   {isExpanded ? 'Hide comment' : 'Show comment'}
                                 </Text>
-                                <Text className="text-sm font-semibold text-[#2563eb]">
+                                <Text className="text-base text-[#15803d]">
                                   {isExpanded ? '▲' : '▼'}
                                 </Text>
                               </View>

@@ -18,6 +18,12 @@ export class CoursesController {
     return this.courses.create(user.id, dto);
   }
 
+  @Get('organizations')
+  @ApiOperation({ summary: 'List all organizations' })
+  listOrganizations(): Promise<Array<{ id: string; name: string }>> {
+    return this.courses.listOrganizations();
+  }
+
   @Get()
   @ApiOperation({ summary: 'List courses visible to the current user' })
   findAll(@CurrentUser() user: RequestUser): Promise<Course[]> {

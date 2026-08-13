@@ -40,7 +40,7 @@ function SignOutButton() {
     <Pressable
       accessibilityRole="button"
       onPress={() => void logout()}
-      className="mr-3 rounded-md border border-[#d3d3d3] bg-[#f8f9fa] px-3.5 py-1.5 hover:bg-[#eff6ff]"
+      className="mr-3 rounded-md border border-[#d3d3d3] bg-[#f8f9fa] px-3.5 py-1.5 hover:bg-slate-100"
     >
       <Text className="text-sm font-medium text-ink">Sign out</Text>
     </Pressable>

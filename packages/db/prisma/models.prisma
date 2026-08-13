@@ -8,6 +8,21 @@
 // are stored as strings rather than native enums, because SQLite has none.
 // ---------------------------------------------------------------------------
 
+/// A school. Ids are stable slugs ("org1".."org6") rather than cuids so that
+/// existing rows, seeds and the client's selector all agree without a mapping
+/// table. Courses and accounts both belong to exactly one organization.
+model Organization {
+  id        String   @id
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users   User[]
+  courses Course[]
+
+  @@map("Organization")
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -17,15 +32,20 @@ model User {
   studentId String?  @unique
   /// "STUDENT" | "INSTRUCTOR" — see @repo/types Role
   role      String   @default("STUDENT")
+  /// School the account belongs to. Collected at sign-up; drives the header
+  /// chip and the instructor's roster filter.
+  organizationId String @default("org1")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  organization     Organization @relation(fields: [organizationId], references: [id])
   coursesTaught    Course[]     @relation("CourseInstructor")
   memberships      TeamMember[]
   evaluationsGiven Evaluation[] @relation("Reviewer")
   evaluationsGot   Evaluation[] @relation("Reviewee")
 
   @@index([role])
+  @@index([organizationId])
 }
 
 model Course {
@@ -33,20 +53,26 @@ model Course {
   code         String
   title        String
   term         String
+  /// Owning school. Replaces the old course-code prefix heuristic.
+  organizationId String @default("org1")
   instructorId String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  instructor User   @relation("CourseInstructor", fields: [instructorId], references: [id], onDelete: Cascade)
-  teams      Team[]
+  organization Organization @relation(fields: [organizationId], references: [id])
+  instructor   User         @relation("CourseInstructor", fields: [instructorId], references: [id], onDelete: Cascade)
+  teams        Team[]
 
   @@unique([code, term])
   @@index([instructorId])
+  @@index([organizationId])
 }
 
 model Team {
   id        String   @id @default(cuid())
   name      String
+  /// Roster cap shown in the instructor tables; null means no cap.
+  maxSize   Int?
   courseId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

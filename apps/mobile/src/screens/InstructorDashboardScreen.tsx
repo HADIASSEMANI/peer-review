@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { Avatar } from '../components/Avatar';
 import { Badge } from '../components/Badge';
+import { StudentBadges, TeamBadges } from '../components/Badges';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { DataTable } from '../components/DataTable';
@@ -15,23 +16,21 @@ import { TextField } from '../components/TextField';
 import { ToastBanner } from '../components/ToastBanner';
 import { useCreateUser } from '../hooks/useAuth';
 import { useCourseSummary } from '../hooks/useEvaluations';
-import { useCourses, useDeleteTeam, useDeleteUser, useStudents } from '../hooks/useTeams';
+import {
+  useCourses,
+  useCreateCourse,
+  useDeleteTeam,
+  useDeleteUser,
+  useStudents,
+} from '../hooks/useTeams';
 import { useUpdateUser } from '../hooks/useUsers';
 import { fullName, percent, score } from '../lib/format';
+import { ORGANIZATIONS, orgLabel } from '../lib/orgs';
 import { useAuthStore } from '../store/auth';
 import type { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'InstructorDashboard'>;
 type SortKey = 'overall' | 'name' | 'studentId' | 'email' | 'reviews';
-
-const getCourseOrg = (code: string): string => {
-  if (code.startsWith('ECSE') || code.startsWith('COMP 2')) return 'org2';
-  if (code.startsWith('IFT')) return 'org3';
-  if (code.startsWith('INF 3')) return 'org4';
-  if (code.startsWith('LOG')) return 'org5';
-  if (code.startsWith('INF 1')) return 'org6';
-  return 'org1';
-};
 
 export function InstructorDashboardScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
@@ -42,6 +41,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
   const createUserMutation = useCreateUser();
   const deleteTeamMutation = useDeleteTeam();
   const deleteUserMutation = useDeleteUser();
+  const createCourseMutation = useCreateCourse();
   const updateUserMutation = useUpdateUser();
 
   const [courseId, setCourseId] = useState<string | null>(null);
@@ -96,6 +96,40 @@ export function InstructorDashboardScreen({ navigation }: Props) {
         onError: (err) => {
           setEditError((err as Error).message);
         },
+      },
+    );
+  };
+
+  // Create Course modal state
+  const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
+  const [courseCode, setCourseCode] = useState('');
+  const [courseTitle, setCourseTitle] = useState('');
+  const [courseTerm, setCourseTerm] = useState('');
+  const [courseError, setCourseError] = useState('');
+
+  const handleCreateCourseSubmit = () => {
+    if (!courseCode.trim() || !courseTitle.trim() || !courseTerm.trim()) {
+      setCourseError('Course code, title and term are all required.');
+      return;
+    }
+    setCourseError('');
+    createCourseMutation.mutate(
+      {
+        code: courseCode.trim(),
+        title: courseTitle.trim(),
+        term: courseTerm.trim(),
+        organizationId: selectedOrg,
+      },
+      {
+        onSuccess: (course) => {
+          setSuccessMessage(`Successfully created course ${course.code}`);
+          setTimeout(() => setSuccessMessage(''), 5000);
+          setIsCourseModalOpen(false);
+          setCourseCode('');
+          setCourseTitle('');
+          setCourseTerm('');
+        },
+        onError: (err) => setCourseError((err as Error).message),
       },
     );
   };
@@ -174,6 +208,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         studentId: studentId.trim(),
+        organizationId: selectedOrg,
         role: Role.STUDENT,
       },
       {
@@ -191,7 +226,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
   };
 
   const filteredCourses = (courses.data ?? []).filter(
-    (course) => getCourseOrg(course.code) === selectedOrg,
+    (course) => course.organizationId === selectedOrg,
   );
   const activeCourseId =
     courseId && filteredCourses.some((c) => c.id === courseId)
@@ -236,14 +271,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
           placeholder="Select School"
           value={selectedOrg}
           onValueChange={(val) => setSelectedOrg(val)}
-          options={[
-            { label: 'Concordia University', value: 'org1' },
-            { label: 'McGill University', value: 'org2' },
-            { label: 'Université de Montréal', value: 'org3' },
-            { label: 'Université du Québec à Montréal', value: 'org4' },
-            { label: 'École de technologie supérieure', value: 'org5' },
-            { label: 'Polytechnique Montréal', value: 'org6' },
-          ]}
+          options={ORGANIZATIONS.map((o) => ({ label: o.label, value: o.value }))}
         />
       </View>
 
@@ -264,9 +292,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                     : 'border border-slate-300 bg-white hover:bg-slate-50',
                 ].join(' ')}
               >
-                <Text
-                  className={selected ? 'text-sm font-bold text-[#2563eb]' : 'text-sm text-ink-700'}
-                >
+                <Text className={selected ? 'text-base text-[#15803d]' : 'text-sm text-ink-700'}>
                   {course.code} · {course.term}
                 </Text>
               </Pressable>
@@ -300,6 +326,17 @@ export function InstructorDashboardScreen({ navigation }: Props) {
         ) : null}
         <View className="flex-1 min-w-[140px]">
           <GradientButton
+            label="+ New Course"
+            fullWidth
+            height={48}
+            onPress={() => {
+              setCourseError('');
+              setIsCourseModalOpen(true);
+            }}
+          />
+        </View>
+        <View className="flex-1 min-w-[140px]">
+          <GradientButton
             label="+ Add New Student"
             tone="green"
             fullWidth
@@ -313,6 +350,100 @@ export function InstructorDashboardScreen({ navigation }: Props) {
       </View>
 
       <Modal
+        visible={isCourseModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsCourseModalOpen(false)}
+      >
+        <View className="flex-1 items-center justify-center bg-black/60 p-4">
+          <View className="w-full max-w-md overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl">
+            <View className="h-2 w-full bg-linear-to-r from-slate-200 via-slate-300 to-slate-200" />
+            <View className="gap-3 p-5 sm:p-6">
+              <View className="flex-row items-center justify-between border-b border-slate-100 pb-3">
+                <View className="flex-row items-center gap-3">
+                  <View className="h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50">
+                    <Text className="text-lg">📚</Text>
+                  </View>
+                  <View>
+                    <Text className="text-xl text-ink">New Course</Text>
+                    <Text className="text-xs text-muted">
+                      Added to {orgLabel(selectedOrg)}
+                    </Text>
+                  </View>
+                </View>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setIsCourseModalOpen(false)}
+                  className="h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100"
+                >
+                  <Text className="text-sm text-slate-500">✕</Text>
+                </Pressable>
+              </View>
+
+              <View className="gap-3">
+                <TextField
+                  label="Course Code"
+                  placeholder="SOEN 341"
+                  value={courseCode}
+                  onChangeText={(t) => {
+                    setCourseCode(t);
+                    setCourseError('');
+                  }}
+                  onSubmitEditing={handleCreateCourseSubmit}
+                  required
+                />
+                <TextField
+                  label="Course Title"
+                  placeholder="Software Process"
+                  value={courseTitle}
+                  onChangeText={(t) => {
+                    setCourseTitle(t);
+                    setCourseError('');
+                  }}
+                  onSubmitEditing={handleCreateCourseSubmit}
+                  required
+                />
+                <TextField
+                  label="Term"
+                  placeholder="Fall 2026"
+                  value={courseTerm}
+                  onChangeText={(t) => {
+                    setCourseTerm(t);
+                    setCourseError('');
+                  }}
+                  onSubmitEditing={handleCreateCourseSubmit}
+                  required
+                />
+                {courseError ? (
+                  <View className="rounded-lg border border-amber-200 bg-amber-50 p-2.5">
+                    <Text className="text-sm text-amber-700">{courseError}</Text>
+                  </View>
+                ) : null}
+              </View>
+
+              <View className="flex-row items-center justify-end gap-3 border-t border-slate-100 pt-3">
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => setIsCourseModalOpen(false)}
+                  className="rounded-xl border border-slate-300 bg-white px-5 py-2 hover:bg-slate-50"
+                >
+                  <Text className="text-sm text-slate-600">Cancel</Text>
+                </Pressable>
+                <View className="min-w-[140px]">
+                  <GradientButton
+                    label={createCourseMutation.isPending ? 'Creating…' : 'Create Course'}
+                    disabled={createCourseMutation.isPending}
+                    onPress={handleCreateCourseSubmit}
+                    height={42}
+                  />
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
         visible={isModalOpen}
         transparent
         animationType="fade"
@@ -321,17 +452,17 @@ export function InstructorDashboardScreen({ navigation }: Props) {
         <View className="flex-1 items-center justify-center bg-black/60 p-4">
           <View className="w-full max-w-lg max-h-[90vh] overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl">
             {/* Top gradient accent bar */}
-            <View className="h-2 w-full bg-gradient-to-r from-[#39ac46] via-[#00abec] to-[#2563eb]" />
+            <View className="h-2 w-full bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200" />
 
             <View className="flex-1 p-5 sm:p-6 gap-3">
               {/* Header */}
               <View className="flex-row items-center justify-between border-b border-slate-100 pb-3">
                 <View className="flex-row items-center gap-3">
-                  <View className="h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-[#eff6ff]">
+                  <View className="h-10 w-10 items-center justify-center rounded-xl border border-slate-100 bg-slate-100">
                     <Text className="text-lg">🎓</Text>
                   </View>
                   <View>
-                    <Text className="text-xl font-extrabold text-ink">Add New Student</Text>
+                    <Text className="text-2xl text-ink">Add New Student</Text>
                     <Text className="text-xs font-medium text-muted">
                       Enter student contact information and credentials
                     </Text>
@@ -342,7 +473,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                   onPress={() => setIsModalOpen(false)}
                   className="h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100"
                 >
-                  <Text className="text-sm font-bold text-slate-500">✕</Text>
+                  <Text className="text-base text-slate-500">✕</Text>
                 </Pressable>
               </View>
 
@@ -424,8 +555,8 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                 </View>
 
                 {submitError ? (
-                  <View className="rounded-lg border border-blue-200 bg-blue-50 p-2.5">
-                    <Text className="text-xs font-semibold text-blue-700">{submitError}</Text>
+                  <View className="rounded-lg border border-amber-200 bg-amber-50 p-2.5">
+                    <Text className="text-sm text-amber-700">{submitError}</Text>
                   </View>
                 ) : null}
               </ScrollView>
@@ -437,7 +568,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                   onPress={() => setIsModalOpen(false)}
                   className="rounded-xl border border-slate-300 bg-white px-5 py-2 hover:bg-slate-50"
                 >
-                  <Text className="text-sm font-semibold text-slate-600">Cancel</Text>
+                  <Text className="text-base text-slate-600">Cancel</Text>
                 </Pressable>
                 <View className="min-w-[140px]">
                   <GradientButton
@@ -464,17 +595,17 @@ export function InstructorDashboardScreen({ navigation }: Props) {
         <View className="flex-1 items-center justify-center bg-black/60 p-4">
           <View className="w-full max-w-lg max-h-[90vh] overflow-hidden rounded-3xl border border-slate-100 bg-white shadow-2xl">
             {/* Top gradient accent bar */}
-            <View className="h-2 w-full bg-gradient-to-r from-[#2563eb] via-[#00abec] to-[#39ac46]" />
+            <View className="h-2 w-full bg-gradient-to-r from-slate-200 via-slate-300 to-slate-200" />
 
             <View className="flex-1 p-5 sm:p-6 gap-3">
               {/* Header */}
               <View className="flex-row items-center justify-between border-b border-slate-100 pb-3">
                 <View className="flex-row items-center gap-3">
-                  <View className="h-10 w-10 items-center justify-center rounded-xl border border-blue-100 bg-[#eff6ff]">
+                  <View className="h-10 w-10 items-center justify-center rounded-xl border border-slate-100 bg-slate-100">
                     <Text className="text-lg">✏️</Text>
                   </View>
                   <View>
-                    <Text className="text-xl font-extrabold text-ink">Edit Student Info</Text>
+                    <Text className="text-2xl text-ink">Edit Student Info</Text>
                     <Text className="text-xs font-medium text-muted">
                       Update student profile details and student ID
                     </Text>
@@ -485,7 +616,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                   onPress={() => setEditingStudent(null)}
                   className="h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100"
                 >
-                  <Text className="text-sm font-bold text-slate-500">✕</Text>
+                  <Text className="text-base text-slate-500">✕</Text>
                 </Pressable>
               </View>
 
@@ -543,8 +674,8 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                 </View>
 
                 {editError ? (
-                  <View className="rounded-lg border border-blue-200 bg-blue-50 p-2.5">
-                    <Text className="text-xs font-semibold text-blue-700">{editError}</Text>
+                  <View className="rounded-lg border border-amber-200 bg-amber-50 p-2.5">
+                    <Text className="text-sm text-amber-700">{editError}</Text>
                   </View>
                 ) : null}
               </ScrollView>
@@ -556,7 +687,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                   onPress={() => setEditingStudent(null)}
                   className="rounded-xl border border-slate-300 bg-white px-5 py-2 hover:bg-slate-50"
                 >
-                  <Text className="text-sm font-semibold text-slate-600">Cancel</Text>
+                  <Text className="text-base text-slate-600">Cancel</Text>
                 </Pressable>
                 <View className="min-w-[140px]">
                   <GradientButton
@@ -575,21 +706,21 @@ export function InstructorDashboardScreen({ navigation }: Props) {
 
       <View className="gap-3">
         {/* Navigation View Mode & Search Row */}
-        <View className="flex-row flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
-          <View className="flex-row gap-2 rounded-xl bg-slate-100 p-1">
+        <View className="flex-col sm:flex-row items-stretch sm:items-center gap-3 border-b border-slate-200 pb-3">
+          <View className="w-full sm:flex-1 flex-row gap-2 rounded-xl bg-slate-100 p-1">
             <Pressable
               accessibilityRole="button"
               onPress={() => setViewMode('teams')}
               className={[
-                'rounded-lg px-4 py-2 transition-all',
+                'flex-1 items-center justify-center rounded-lg px-3 py-2 transition-all',
                 viewMode === 'teams' ? 'liquid-glass-pill-active' : 'bg-transparent',
               ].join(' ')}
             >
               <Text
                 className={
                   viewMode === 'teams'
-                    ? 'text-sm font-bold text-[#2563eb]'
-                    : 'text-sm font-medium text-slate-600'
+                    ? 'text-base text-center text-[#15803d]'
+                    : 'text-base text-center text-slate-600'
                 }
               >
                 👥 Teams ({summary.data?.length ?? 0})
@@ -599,23 +730,23 @@ export function InstructorDashboardScreen({ navigation }: Props) {
               accessibilityRole="button"
               onPress={() => setViewMode('students')}
               className={[
-                'rounded-lg px-4 py-2 transition-all',
+                'flex-1 items-center justify-center rounded-lg px-3 py-2 transition-all',
                 viewMode === 'students' ? 'liquid-glass-pill-active' : 'bg-transparent',
               ].join(' ')}
             >
               <Text
                 className={
                   viewMode === 'students'
-                    ? 'text-sm font-bold text-[#2563eb]'
-                    : 'text-sm font-medium text-slate-600'
+                    ? 'text-base text-center text-[#15803d]'
+                    : 'text-base text-center text-slate-600'
                 }
               >
-                🎓 Student Directory ({studentDirectory.data?.length ?? 0})
+                🎓 Students ({studentDirectory.data?.length ?? 0})
               </Text>
             </Pressable>
           </View>
 
-          <View className="w-full sm:w-72">
+          <View className="w-full sm:flex-1">
             <TextField
               label=""
               placeholder={
@@ -632,7 +763,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
         <View className="gap-3">
           {/* Sort Students Controls for Student Directory */}
           <View className="flex-row flex-wrap items-center gap-2">
-            <Text className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <Text className="text-sm uppercase tracking-wider text-slate-500">
               Sort directory by:
             </Text>
             {(
@@ -655,9 +786,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
               >
                 <Text
                   className={
-                    sortBy === key
-                      ? 'text-xs font-bold text-[#2563eb]'
-                      : 'text-xs font-medium text-slate-600'
+                    sortBy === key ? 'text-sm text-[#15803d]' : 'text-xs font-medium text-slate-600'
                   }
                 >
                   {label}
@@ -689,7 +818,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                     >
                       <Avatar user={s} size={32} />
                       <View className="items-start text-left">
-                        <Text className="text-left text-sm font-bold text-[#2563eb] underline">
+                        <Text className="text-left text-base text-[#15803d] underline">
                           {fullName(s)}
                         </Text>
                         <Text className="text-left text-xs text-muted">{s.email}</Text>
@@ -702,9 +831,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                   header: 'Student ID',
                   width: 1.5,
                   render: (s) => (
-                    <Text className="text-left text-sm font-bold text-slate-700">
-                      {s.studentId ?? '—'}
-                    </Text>
+                    <Text className="text-left text-base text-slate-700">{s.studentId ?? '—'}</Text>
                   ),
                 },
                 {
@@ -748,23 +875,25 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                             });
                           }
                         }}
-                        className="flex-row items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 shadow-xs hover:border-blue-300 hover:bg-blue-100 transition-all"
+                        className="flex-row items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 shadow-xs hover:border-slate-300 hover:bg-slate-100 transition-all"
                       >
-                        <Text className="text-xs font-bold text-blue-600">✕</Text>
-                        <Text className="text-xs font-medium text-blue-700">Remove</Text>
+                        <Text className="text-sm text-slate-700">✕</Text>
+                        <Text className="text-xs font-medium text-slate-700">Remove</Text>
                       </Pressable>
                     </View>
                   ),
                 },
               ]}
-              rows={[...studentDirectory.data].sort((a, b) => {
+              rows={[...studentDirectory.data]
+                .filter((s) => s.organizationId === selectedOrg)
+                .sort((a, b) => {
                 if (sortBy === 'name')
                   return (a.lastName + a.firstName).localeCompare(b.lastName + b.firstName);
                 if (sortBy === 'studentId')
                   return (a.studentId ?? '').localeCompare(b.studentId ?? '');
                 if (sortBy === 'email') return a.email.localeCompare(b.email);
-                return (a.lastName + a.firstName).localeCompare(b.lastName + b.firstName);
-              })}
+                  return (a.lastName + a.firstName).localeCompare(b.lastName + b.firstName);
+                })}
               keyExtractor={(s) => s.id}
               emptyMessage="No students found matching your search."
             />
@@ -819,7 +948,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                       className="flex-1 flex-row items-center gap-3"
                     >
                       <View className="flex-1">
-                        <Text className="text-lg font-bold text-ink">{team.teamName}</Text>
+                        <Text className="text-xl text-ink">{team.teamName}</Text>
                         <Text className="mt-0.5 text-xs text-muted">
                           {team.memberCount} members · {percent(team.completionRate)} submitted
                         </Text>
@@ -833,6 +962,10 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                               ? 'warning'
                               : 'neutral'
                         }
+                      />
+                      <TeamBadges
+                        submittedCount={team.submittedCount}
+                        expectedCount={team.expectedCount}
                       />
                     </Pressable>
 
@@ -851,8 +984,8 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                         }
                         className="flex-row items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all"
                       >
-                        <Text className="text-xs font-bold text-slate-500">✏</Text>
-                        <Text className="text-xs font-semibold text-slate-700">Edit</Text>
+                        <Text className="text-sm text-slate-500">✏</Text>
+                        <Text className="text-sm text-slate-700">Edit</Text>
                       </Pressable>
 
                       <Pressable
@@ -873,10 +1006,10 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                             });
                           }
                         }}
-                        className="flex-row items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/80 px-3 py-1.5 shadow-sm hover:border-blue-300 hover:bg-blue-100/80 transition-all"
+                        className="flex-row items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-1.5 shadow-sm hover:border-slate-300 hover:bg-slate-100/80 transition-all"
                       >
-                        <Text className="text-xs font-bold text-blue-600">🗑</Text>
-                        <Text className="text-xs font-semibold text-blue-700">Delete</Text>
+                        <Text className="text-sm text-slate-700">🗑</Text>
+                        <Text className="text-sm text-slate-700">Delete</Text>
                       </Pressable>
 
                       <Pressable
@@ -885,9 +1018,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                         onPress={() => toggleTeam(team.teamId)}
                         className="h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-all"
                       >
-                        <Text className="text-xs font-bold text-[#2563eb]">
-                          {isExpanded ? '▲' : '▼'}
-                        </Text>
+                        <Text className="text-sm text-[#15803d]">{isExpanded ? '▲' : '▼'}</Text>
                       </Pressable>
                     </View>
                   </View>
@@ -913,7 +1044,7 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                             className="flex-row items-center justify-between gap-3 rounded-xl border border-slate-200/60 bg-slate-50/70 p-3"
                           >
                             <View className="flex-1">
-                              <Text className="text-sm font-bold text-ink-900">
+                              <Text className="text-base text-ink-900">
                                 {s.user.firstName} {s.user.lastName}
                               </Text>
                               <Text className="text-xs text-ink-500">
@@ -923,7 +1054,12 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                               </Text>
                             </View>
                             <View className="flex-row items-center gap-3">
-                              <Text className="text-sm font-extrabold text-ink-900">
+                              <StudentBadges
+                                averages={s.averages}
+                                overall={s.overall}
+                                reviewCount={s.reviewCount}
+                              />
+                              <Text className="text-base text-ink-900">
                                 {s.reviewCount > 0 ? score(s.overall) : '—'}
                               </Text>
                               <Pressable
@@ -946,10 +1082,10 @@ export function InstructorDashboardScreen({ navigation }: Props) {
                                     });
                                   }
                                 }}
-                                className="flex-row items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 shadow-xs hover:border-blue-300 hover:bg-blue-100 transition-all"
+                                className="flex-row items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 shadow-xs hover:border-slate-300 hover:bg-slate-100 transition-all"
                               >
-                                <Text className="text-xs font-bold text-blue-600">✕</Text>
-                                <Text className="text-xs font-medium text-blue-700">Remove</Text>
+                                <Text className="text-sm text-slate-700">✕</Text>
+                                <Text className="text-xs font-medium text-slate-700">Remove</Text>
                               </Pressable>
                             </View>
                           </View>

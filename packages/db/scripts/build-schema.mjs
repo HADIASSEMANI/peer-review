@@ -119,7 +119,11 @@ datasource db {
 
 writeFileSync(resolve(pkgRoot, 'prisma/schema.prisma'), `${header}\n${models}`);
 
-writeFileSync(
+// In production (Render et al.) the platform's own environment variables are
+// the only source of truth. Writing a generated .env there would leave a stale
+// DATABASE_URL on disk that could shadow a rotated one, so skip it entirely.
+if (process.env.NODE_ENV !== 'production') {
+  writeFileSync(
   resolve(pkgRoot, '.env'),
   `# GENERATED FILE — do not edit. Written by scripts/build-schema.mjs.\n` +
     `# Edit the repo-root .env instead. This is the RESOLVED value every package\n` +
@@ -128,6 +132,11 @@ writeFileSync(
     `# Re-run \`bun run --cwd packages/db schema\` after editing the root .env.\n` +
     `DATABASE_PROVIDER=${provider}\n` +
     `DATABASE_URL="${url}"\n`,
-);
+  );
+}
 
-console.log(`[@repo/db] schema.prisma + .env written for provider "${provider}"`);
+const wroteEnv = process.env.NODE_ENV !== 'production';
+console.log(
+  `[@repo/db] schema.prisma${wroteEnv ? ' + .env' : ''} written for provider "${provider}"` +
+    (wroteEnv ? '' : ' (production: using platform env vars, no .env written)'),
+);
