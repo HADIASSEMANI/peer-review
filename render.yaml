@@ -1,0 +1,33 @@
+# Render Blueprint configuration for Peer Review v2
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: peer-review-api
+    env: node
+    plan: free
+    buildCommand: bun install && bun run --cwd packages/db push && bun run --cwd packages/db seed && bun run build
+    startCommand: bun run --cwd apps/api start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_PROVIDER
+        value: postgresql
+      - key: DATABASE_URL
+        fromDatabase:
+          name: peer-review-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: API_PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        value: "*" # Update this with your frontend URL once deployed
+
+databases:
+  - name: peer-review-db
+    plan: free
+    databaseName: peerreview
+    user: peerreview
