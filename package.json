@@ -15,10 +15,9 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "db:push": "bun run --cwd packages/db push",
-    "schema": "node packages/db/scripts/build-schema.mjs",
-    "db:generate": "bunx prisma generate --schema=packages/db/prisma/schema.prisma",
-    "db:seed": "bun run packages/db/prisma/seed.ts",
-    "db:reset": "bun run schema && bun run db:generate && bun run db:seed",
+    "db:generate": "bun run --cwd packages/db generate",
+    "db:seed": "bun run --cwd packages/db seed",
+    "db:reset": "bun run --cwd packages/db reset",
     "db:studio": "bun run --cwd packages/db studio",
     "api:openapi": "bun run --cwd apps/api openapi",
     "clean": "turbo run clean && rm -rf node_modules"

@@ -24,19 +24,19 @@ model Organization {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  firstName String
-  lastName  String
-  studentId String?  @unique
+  id             String   @id @default(cuid())
+  email          String   @unique
+  password       String
+  firstName      String
+  lastName       String
+  studentId      String?  @unique
   /// "STUDENT" | "INSTRUCTOR" — see @repo/types Role
-  role      String   @default("STUDENT")
+  role           String   @default("STUDENT")
   /// School the account belongs to. Collected at sign-up; drives the header
   /// chip and the instructor's roster filter.
-  organizationId String @default("org1")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  organizationId String   @default("org1")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   organization     Organization @relation(fields: [organizationId], references: [id])
   coursesTaught    Course[]     @relation("CourseInstructor")
@@ -49,15 +49,15 @@ model User {
 }
 
 model Course {
-  id           String   @id @default(cuid())
-  code         String
-  title        String
-  term         String
+  id             String   @id @default(cuid())
+  code           String
+  title          String
+  term           String
   /// Owning school. Replaces the old course-code prefix heuristic.
-  organizationId String @default("org1")
-  instructorId String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  organizationId String   @default("org1")
+  instructorId   String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   organization Organization @relation(fields: [organizationId], references: [id])
   instructor   User         @relation("CourseInstructor", fields: [instructorId], references: [id], onDelete: Cascade)
