@@ -1,7 +1,7 @@
 import { createApiClient } from '@repo/api-client';
 import { useAuthStore } from '../store/auth';
 
-const baseUrl = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:3001';
+const baseUrl = (import.meta.env.VITE_API_URL as string | undefined) ?? 'https://peer-review.onrender.com';
 
 export const api = createApiClient({
   baseUrl,
