@@ -55,6 +55,8 @@ packages/db/prisma/dev.db*
 
 # App / Package Generated Artifacts
 packages/db/.env
+packages/db/prisma/schema.prisma
+packages/db/generated/
 
 # IDEs & Editors
 .vscode/
