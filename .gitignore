@@ -58,8 +58,6 @@ packages/db/prisma/dev.db*
 packages/db/.env
 # Generated per-provider by scripts/build-schema.mjs — committing it would bake
 # whichever provider was last built locally into the repo.
-packages/db/prisma/schema.prisma
-packages/db/generated/
 apps/api/openapi.json
 
 # IDEs & Editors
