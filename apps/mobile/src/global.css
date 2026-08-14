@@ -224,16 +224,6 @@
     0 0 16px rgba(255, 255, 255, 0.15);
 }
 
-/* ---------------------------------------------------------------------------
-   Night mode
-   Palette: https://colorhunt.co/palette/003049d62828f77f00fcbf49
-     #003049  canvas          #F77F00  accent, borders, active fills
-     #FCBF49  text            #D62828  errors and destructive actions
-   Everything below reads from the tokens in this first block, so retheming is
-   a matter of editing five values rather than three hundred rules. The
-   !important flags are unavoidable: these override Tailwind utility classes
-   that postcss emits after this file.
---------------------------------------------------------------------------- */
 html.night-mode {
   --nm-canvas: #003049;
   --nm-surface: #01415F;

@@ -189,7 +189,7 @@ export function BottomNav() {
                   height: 24,
                   transform: [{ rotate: '45deg' }],
                   transition: 'transform 0.5s',
-                }}
+                } as any}
                 resizeMode="contain"
               />
             ) : (
@@ -202,7 +202,7 @@ export function BottomNav() {
                   height: 24,
                   transform: [{ rotate: '0deg' }],
                   transition: 'transform 0.5s',
-                }}
+                } as any}
                 resizeMode="contain"
               />
             )}

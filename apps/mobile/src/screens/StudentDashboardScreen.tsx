@@ -128,7 +128,7 @@ export function StudentDashboardScreen({ navigation }: Props) {
         render: (t) => (
           <View className="gap-0.5">
             {EVAL_DIMENSIONS.map((d) => (
-              <Text key={d} className="text-sm text-FE7F2D">
+              <Text key={d} className="text-sm">
                 <Text className="">{SHORT_LABEL[d]}:</Text>{' '}
                 {t.existingComments?.[d]?.trim() || 'No comment'}
               </Text>
@@ -175,9 +175,7 @@ export function StudentDashboardScreen({ navigation }: Props) {
         <View className={`w-full ${isCompact ? 'flex-col gap-4' : 'flex-row gap-8 items-start'}`}>
           <View
             className={`${
-              isCompact
-                ? 'hidden'
-                : 'w-56 flex-col gap-1 rounded-xl bg-slate-100 p-1.5'
+              isCompact ? 'hidden' : 'w-56 flex-col gap-1 rounded-xl bg-slate-100 p-1.5'
             }`}
           >
             {TABS.map((tab) => {
@@ -405,22 +403,20 @@ export function StudentDashboardScreen({ navigation }: Props) {
                               onPress={() => toggleFeedback(index)}
                               className="flex-row items-center justify-between gap-3"
                             >
-                              <Text className="text-sm uppercase tracking-wide text-[#FE7F2D]">
+                              <Text className="text-sm uppercase tracking-wide text-ink">
                                 {DIMENSION_LABELS[comment.dimension]}
                               </Text>
                               <View className="flex-row items-center gap-2">
-                                <Text className="text-xs text-muted">
+                                <Text className="text-xs text-ink">
                                   {isExpanded ? 'Hide comment' : 'Show comment'}
                                 </Text>
-                                <Text className="text-base text-[#FE7F2D]">
-                                  {isExpanded ? '▲' : '▼'}
-                                </Text>
+                                <Text className="text-base text-ink">{isExpanded ? '▲' : '▼'}</Text>
                               </View>
                             </Pressable>
 
                             {isExpanded ? (
                               <View className="mt-3 border-t border-slate-200 pt-3">
-                                <Text className="text-base leading-6 text-[#ffffff]">
+                                <Text className="text-base leading-6 text-slate-500">
                                   {comment.text}
                                 </Text>
                               </View>

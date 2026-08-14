@@ -247,9 +247,9 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
         {/* Title & Progress Bar */}
         <View className="gap-2">
           <Text className="text-3xl text-ink-900">{teamName} · Peer Assessment</Text>
-          <View className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+          <View className="progress-track h-2 w-full overflow-hidden rounded-full bg-slate-200">
             <View
-              className="h-full rounded-full bg-gradient-to-r from-[#000000] to-slate-200 transition-all"
+              className="accent-fill h-full rounded-full bg-gradient-to-r from-[#000000] to-slate-200 transition-all duration-300 ease-out"
               style={{ width: `${progressPercent}%` }}
             />
           </View>
