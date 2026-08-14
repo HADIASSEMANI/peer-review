@@ -57,6 +57,33 @@ services:
       - key: CORS_ORIGIN
         value: "*"
 
+  # ---------------------------------------------------------------------------
+  # Web app. Served as a static site; VITE_API_URL is baked in at BUILD time,
+  # so changing it requires a redeploy, not just an env edit.
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: peer-review-web
+    runtime: static
+    buildCommand: >-
+      curl -fsSL https://bun.sh/install | bash &&
+      export PATH="$HOME/.bun/bin:$PATH" &&
+      bun install --frozen-lockfile &&
+      bunx turbo run build --filter=@repo/mobile
+    staticPublishPath: apps/mobile/dist
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      # Set this in the dashboard to the API service's URL, e.g.
+      # https://peer-review-api.onrender.com — Render cannot template a full
+      # URL from another service, so it is entered once by hand.
+      - key: VITE_API_URL
+        sync: false
+    routes:
+      # Single-page app: every path must serve index.html or a refresh 404s.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
 databases:
   # HEADS UP: a free Render Postgres instance is DELETED 30 days after it is
   # created (plus a 14-day grace period to upgrade). Capped at 1 GB, and only

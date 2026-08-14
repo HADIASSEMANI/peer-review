@@ -19,10 +19,12 @@ import { useEvaluationTargets, useMyFeedback } from '../hooks/useEvaluations';
 import { useTeams } from '../hooks/useTeams';
 import { fullName, score } from '../lib/format';
 import { useAuthStore } from '../store/auth';
+import { useUiStore, type StudentTab } from '../store/ui';
 import type { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'StudentDashboard'>;
-type Tab = 'My Teams' | 'Submissions' | 'Feedback';
+/* Owned by the ui store so the mobile bottom nav can switch tabs too. */
+type Tab = StudentTab;
 
 const TABS: Tab[] = ['My Teams', 'Submissions', 'Feedback'];
 
@@ -50,26 +52,35 @@ const avg = (t: EvaluationTarget): string => {
   ).toFixed(2);
 };
 
-const shortDate = (iso: string | null): string =>
-  iso ? new Date(iso).toLocaleDateString() : '—';
+const shortDate = (iso: string | null): string => (iso ? new Date(iso).toLocaleDateString() : '—');
 
 export function StudentDashboardScreen({ navigation }: Props) {
   const user = useAuthStore((s) => s.user);
   const { isCompact } = useBreakpoint();
-  const [active, setActive] = useState<Tab>('My Teams');
-  const [expandedFeedbackIndexes, setExpandedFeedbackIndexes] = useState<Record<number, boolean>>({});
+  const active = useUiStore((s) => s.studentTab);
+  const setActive = useUiStore((s) => s.setStudentTab);
+  const [expandedFeedbackIndexes, setExpandedFeedbackIndexes] = useState<Record<number, boolean>>(
+    {},
+  );
+  const [expandedSubmissionIds, setExpandedSubmissionIds] = useState<Record<string, boolean>>({});
 
   const toggleFeedback = (index: number) => {
     setExpandedFeedbackIndexes((prev) => ({ ...prev, [index]: !prev[index] }));
   };
+
+  const toggleSubmission = (id: string) => {
+    setExpandedSubmissionIds((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
 
   const teams = useTeams();
-  const currentTeamId = selectedTeamId;
+  const currentTeamId = selectedTeamId ?? teams.data?.[0]?.id ?? null;
   const targets = useEvaluationTargets(currentTeamId ?? '');
   const feedback = useMyFeedback();
 
-  const selectedTeam = currentTeamId ? (teams.data?.find((t) => t.id === currentTeamId) ?? null) : null;
+  const selectedTeam = selectedTeamId
+    ? (teams.data?.find((t) => t.id === selectedTeamId) ?? null)
+    : null;
 
   const tabCounts: Record<Tab, number | null> = {
     'My Teams': teams.data?.length ?? null,
@@ -117,7 +128,7 @@ export function StudentDashboardScreen({ navigation }: Props) {
         render: (t) => (
           <View className="gap-0.5">
             {EVAL_DIMENSIONS.map((d) => (
-              <Text key={d} className="text-sm text-ink">
+              <Text key={d} className="text-sm text-FE7F2D">
                 <Text className="">{SHORT_LABEL[d]}:</Text>{' '}
                 {t.existingComments?.[d]?.trim() || 'No comment'}
               </Text>
@@ -151,9 +162,7 @@ export function StudentDashboardScreen({ navigation }: Props) {
     <AppShell>
       <View className="mx-auto w-full max-w-5xl gap-5">
         <View className="gap-1">
-          <Text className="text-3xl text-ink">
-            Welcome{user ? `, ${user.firstName}` : ''}
-          </Text>
+          <Text className="text-3xl text-ink">Welcome{user ? `, ${user.firstName}` : ''}</Text>
           <Text className="text-sm text-muted">
             {selectedTeam
               ? `${selectedTeam.name} · ${selectedTeam.course?.code ?? ''} ${selectedTeam.course?.term ?? ''}`
@@ -161,12 +170,13 @@ export function StudentDashboardScreen({ navigation }: Props) {
           </Text>
         </View>
 
-        {/* Sidebar for Desktop, Top Tabs for Mobile */}
+        {/* Sidebar on desktop. On phones the bottom nav owns tab switching, so
+            this row would be a second copy of the same control. */}
         <View className={`w-full ${isCompact ? 'flex-col gap-4' : 'flex-row gap-8 items-start'}`}>
           <View
             className={`${
               isCompact
-                ? 'w-full flex-row justify-around gap-2 rounded-xl bg-slate-100 p-1'
+                ? 'hidden'
                 : 'w-56 flex-col gap-1 rounded-xl bg-slate-100 p-1.5'
             }`}
           >
@@ -180,16 +190,14 @@ export function StudentDashboardScreen({ navigation }: Props) {
                   accessibilityState={{ selected: on }}
                   onPress={() => setActive(tab)}
                   className={[
-                    'rounded-lg px-4 py-2.5 flex-row items-center gap-2 transition-all',
+                    'liquid-glass-pill rounded-full px-4 py-2.5 flex-row items-center gap-2 transition-all hover:z-20',
                     isCompact ? 'flex-1 justify-center' : 'w-full',
-                    on ? 'liquid-glass-pill-active' : 'bg-transparent hover:bg-slate-100',
+                    on ? 'liquid-glass-pill-active active z-10' : 'z-0',
                   ].join(' ')}
                 >
                   <Text
                     className={
-                      on
-                        ? 'text-base text-[#15803d]'
-                        : 'text-sm font-medium text-slate-600'
+                      on ? 'text-sm text-white font-medium' : 'text-sm font-medium text-slate-600'
                     }
                   >
                     {TAB_EMOJI[tab]} {tab}
@@ -204,20 +212,21 @@ export function StudentDashboardScreen({ navigation }: Props) {
           <View className="flex-1 w-full gap-5">
             {active === 'My Teams' ? (
               <View className="gap-4">
+                <Text className="text-sm text-slate-500 italic mb-2 animate-pulse">
+                  Tip: Click on your team to view more details and access peer evaluations.
+                </Text>
                 <DataTable
                   columns={teamColumns}
                   rows={teams.data ?? []}
                   keyExtractor={(t) => t.id}
                   onRowPress={(t) => setSelectedTeamId((prev) => (prev === t.id ? null : t.id))}
-                  selectedKey={currentTeamId}
+                  selectedKey={selectedTeamId}
                   emptyMessage="Your instructor has not added you to a team yet."
                 />
 
                 {selectedTeam ? (
                   <View className="gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-card">
-                    <Text className="text-xl text-ink">
-                      {selectedTeam.name} — Teammates
-                    </Text>
+                    <Text className="text-xl text-ink">{selectedTeam.name} — Teammates</Text>
                     <View className="gap-2 pl-2">
                       {selectedTeam.members
                         .filter((m) => m.userId !== user?.id)
@@ -248,7 +257,7 @@ export function StudentDashboardScreen({ navigation }: Props) {
 
             {active === 'Submissions' ? (
               <View className="gap-4">
-                <Alert title="Confidentiality Reminder">
+                <Alert title="Confidentiality Reminder" tone="info">
                   Please maintain the confidentiality of all peer feedback information.
                 </Alert>
 
@@ -259,12 +268,105 @@ export function StudentDashboardScreen({ navigation }: Props) {
                     onRetry={() => void targets.refetch()}
                   />
                 ) : (
-                  <DataTable
-                    columns={submissionColumns}
-                    rows={(targets.data ?? []).filter((t) => t.submitted)}
-                    keyExtractor={(t) => t.user.id}
-                    emptyMessage="No peer feedback found."
-                  />
+                  <View className="gap-4">
+                    {(() => {
+                      const submittedTargets = (targets.data ?? []).filter((t) => t.submitted);
+                      if (submittedTargets.length === 0) {
+                        return (
+                          <View className="items-center rounded-2xl border border-slate-200 bg-white px-4 py-8 shadow-card">
+                            <Text className="text-sm text-slate-500">No peer feedback found.</Text>
+                          </View>
+                        );
+                      }
+                      return submittedTargets.map((t) => {
+                        const isExpanded = Boolean(expandedSubmissionIds[t.user.id]);
+                        return (
+                          <View
+                            key={t.user.id}
+                            className="rounded-2xl border border-slate-200 bg-white shadow-card overflow-hidden transition-all"
+                          >
+                            <Pressable
+                              accessibilityRole="button"
+                              accessibilityState={{ expanded: isExpanded }}
+                              onPress={() => toggleSubmission(t.user.id)}
+                              className={[
+                                'flex-row items-center justify-between p-5 cursor-pointer transition-all hover:bg-slate-50',
+                                isExpanded ? 'border-b border-slate-100' : '',
+                              ].join(' ')}
+                            >
+                              <View className="gap-0.5">
+                                <Text className="text-lg font-medium text-ink swap-white-to-orange">
+                                  {fullName(t.user)}
+                                </Text>
+                                <Text className="text-sm text-slate-500 swap-orange-to-white">
+                                  Submitted on {shortDate(t.submittedAt)}
+                                </Text>
+                              </View>
+                              <View className="flex-row items-center gap-4">
+                                <View className="items-end">
+                                  <Text className="text-2xl font-semibold text-brand-600">
+                                    {avg(t)}
+                                  </Text>
+                                  <Text className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                    Average
+                                  </Text>
+                                </View>
+                                <Text className="text-base text-slate-500 pl-2">
+                                  {isExpanded ? '▲' : '▼'}
+                                </Text>
+                              </View>
+                            </Pressable>
+
+                            {isExpanded ? (
+                              <View className="gap-4 p-5 pt-4">
+                                <View className="flex-row flex-wrap gap-4 pt-1">
+                                  {[
+                                    { label: 'Cooperation', value: t.existing?.cooperation },
+                                    {
+                                      label: 'Conceptual',
+                                      value: t.existing?.conceptualContribution,
+                                    },
+                                    {
+                                      label: 'Practical',
+                                      value: t.existing?.practicalContribution,
+                                    },
+                                    { label: 'Work Ethic', value: t.existing?.workEthic },
+                                  ].map((score, i) => (
+                                    <View key={i} className="min-w-[100px] flex-1">
+                                      <Text className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                        {score.label}
+                                      </Text>
+                                      <Text className="text-base text-ink">
+                                        {score.value ?? '—'}
+                                      </Text>
+                                    </View>
+                                  ))}
+                                </View>
+
+                                <View className="mt-2 gap-3 rounded-xl bg-slate-50 p-4 border border-slate-100">
+                                  <Text className="text-sm font-semibold text-slate-700">
+                                    Feedback Comments
+                                  </Text>
+                                  {EVAL_DIMENSIONS.map((d) => (
+                                    <View key={d} className="gap-0.5">
+                                      <Text className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                                        {SHORT_LABEL[d]}
+                                      </Text>
+                                      <Text className="text-sm text-slate-700 italic">
+                                        {t.existingComments?.[d]?.trim()
+                                          ? `"${t.existingComments[d].trim()}"`
+                                          : 'No comment provided.'}
+                                      </Text>
+                                    </View>
+                                  ))}
+                                </View>
+                              </View>
+                            ) : null}
+                          </View>
+                        );
+                      });
+                    })()}
+                  </View>
                 )}
               </View>
             ) : null}
@@ -277,7 +379,11 @@ export function StudentDashboardScreen({ navigation }: Props) {
                   <>
                     <View className="gap-3">
                       {Object.values(EvalDimension).map((d) => (
-                        <ScoreBar key={d} label={DIMENSION_LABELS[d]} value={feedback.data.averages[d]} />
+                        <ScoreBar
+                          key={d}
+                          label={DIMENSION_LABELS[d]}
+                          value={feedback.data.averages[d]}
+                        />
                       ))}
                       <Text className="text-center text-sm text-muted">
                         Overall {score(feedback.data.overall)} / 7 from {feedback.data.reviewCount}{' '}
@@ -299,14 +405,14 @@ export function StudentDashboardScreen({ navigation }: Props) {
                               onPress={() => toggleFeedback(index)}
                               className="flex-row items-center justify-between gap-3"
                             >
-                              <Text className="text-sm uppercase tracking-wide text-[#15803d]">
+                              <Text className="text-sm uppercase tracking-wide text-[#FE7F2D]">
                                 {DIMENSION_LABELS[comment.dimension]}
                               </Text>
                               <View className="flex-row items-center gap-2">
                                 <Text className="text-xs text-muted">
                                   {isExpanded ? 'Hide comment' : 'Show comment'}
                                 </Text>
-                                <Text className="text-base text-[#15803d]">
+                                <Text className="text-base text-[#FE7F2D]">
                                   {isExpanded ? '▲' : '▼'}
                                 </Text>
                               </View>
@@ -314,7 +420,9 @@ export function StudentDashboardScreen({ navigation }: Props) {
 
                             {isExpanded ? (
                               <View className="mt-3 border-t border-slate-200 pt-3">
-                                <Text className="text-base leading-6 text-slate-800">{comment.text}</Text>
+                                <Text className="text-base leading-6 text-[#ffffff]">
+                                  {comment.text}
+                                </Text>
                               </View>
                             ) : null}
                           </View>
@@ -335,4 +443,3 @@ export function StudentDashboardScreen({ navigation }: Props) {
     </AppShell>
   );
 }
-

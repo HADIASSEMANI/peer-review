@@ -1,12 +1,12 @@
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 
-type Tone = 'blue' | 'green' | 'ghost';
+type Tone = 'blue' | 'black' | 'ghost';
 
 interface GradientButtonProps {
   label: string;
   onPress: () => void;
   /**
-   * `blue` and `green` both render the accent capsule — kept as aliases so
+   * `blue` and `black` both render the accent capsule — kept as aliases so
    * existing call sites need no edit. `ghost` is the quiet variant.
    */
   tone?: Tone;
@@ -25,7 +25,7 @@ interface GradientButtonProps {
 export function GradientButton({
   label,
   onPress,
-  tone = 'green',
+  tone = 'black',
   disabled = false,
   loading = false,
   fullWidth = true,

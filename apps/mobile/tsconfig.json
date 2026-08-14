@@ -6,7 +6,15 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client", "nativewind/types"],
     "noEmit": true,
-    "allowJs": false
+    "allowJs": false,
+    // Mirror the Vite aliases. Without these, Vite compiles @repo/* from src
+    // while TypeScript checks against the packages' built .d.ts — so an edit
+    // to a shared schema would typecheck against yesterday's build until
+    // someone remembered to rebuild. Both toolchains now read one source.
+    "paths": {
+      "@repo/types": ["../../packages/types/src/index.ts"],
+      "@repo/api-client": ["../../packages/api-client/src/index.ts"]
+    }
   },
   // `react-native` is deliberately NOT remapped for TypeScript: the real
   // react-native types are the contract react-native-web implements. The alias

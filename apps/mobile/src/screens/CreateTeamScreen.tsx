@@ -1,6 +1,6 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useMemo, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, Image } from 'react-native';
 import { Avatar } from '../components/Avatar';
 import { ButtonGroup } from '../components/ButtonGroup';
 import { Card } from '../components/Card';
@@ -8,7 +8,7 @@ import { GradientButton } from '../components/GradientButton';
 import { ErrorState, Loading, Screen } from '../components/Screen';
 import { TextField } from '../components/TextField';
 import { useBreakpoint } from '../hooks/useBreakpoint';
-import { useCreateTeam, useStudents, useTeams, useUpdateTeam } from '../hooks/useTeams';
+import { useCourses, useCreateTeam, useStudents, useTeams, useUpdateTeam } from '../hooks/useTeams';
 import { fullName } from '../lib/format';
 import type { RootStackParamList } from '../navigation/types';
 
@@ -22,8 +22,13 @@ export function CreateTeamScreen({ route, navigation }: Props) {
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<string[]>(initialMemberIds);
 
-  const students = useStudents(search || undefined);
+  const courses = useCourses();
   const courseTeams = useTeams(courseId);
+
+  // Unscoped on purpose: a student not yet on any team must be selectable.
+  // Confined to the course's own school so cross-organization rosters are impossible.
+  const courseOrgId = courses.data?.find((c) => c.id === courseId)?.organizationId;
+  const students = useStudents(search || undefined, courseOrgId);
   const createTeam = useCreateTeam();
   const updateTeam = useUpdateTeam(teamId ?? '');
 
@@ -83,16 +88,21 @@ export function CreateTeamScreen({ route, navigation }: Props) {
             onPress={() => navigation.goBack()}
             className="flex-row items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50 transition-all"
           >
-            <Text className="text-base text-slate-500">←</Text>
+            <Image
+              source={{ uri: '/arrow-back-outline.svg' }}
+              accessibilityLabel="Back"
+              className="keep-bg icon-on-light"
+              style={{ width: 18, height: 18 }}
+              resizeMode="contain"
+            />
             <Text className="text-base text-slate-700">Back</Text>
           </Pressable>
 
           <View className="flex-1">
-            <Text className="text-3xl text-ink">
-              {isEditing ? 'Edit team' : 'Create a team'}
-            </Text>
+            <Text className="text-3xl text-ink">{isEditing ? 'Edit team' : 'Create a team'}</Text>
             <Text className="text-xs font-medium text-muted">
-              {courseCode} · {isEditing ? 'update team name and roster' : 'pick a name and a roster'}
+              {courseCode} ·{' '}
+              {isEditing ? 'update team name and roster' : 'pick a name and a roster'}
             </Text>
           </View>
         </View>
@@ -177,9 +187,7 @@ export function CreateTeamScreen({ route, navigation }: Props) {
 
                 {onOtherTeam ? (
                   <View className="rounded-full border border-slate-200 bg-white px-2.5 py-1">
-                    <Text className="text-xs text-slate-500">
-                      On {onOtherTeam}
-                    </Text>
+                    <Text className="text-xs text-slate-500">On {onOtherTeam}</Text>
                   </View>
                 ) : (
                   <View
@@ -188,9 +196,7 @@ export function CreateTeamScreen({ route, navigation }: Props) {
                       isSelected ? 'border-slate-400 bg-slate-100' : 'border-slate-300',
                     ].join(' ')}
                   >
-                    {isSelected ? (
-                      <Text className="text-sm text-[#15803d]">✓</Text>
-                    ) : null}
+                    {isSelected ? <Text className="text-sm text-[#000000]">✓</Text> : null}
                   </View>
                 )}
               </Pressable>

@@ -92,7 +92,10 @@ export function TeamDetailScreen({ route, navigation }: Props) {
       ) : null}
 
       {summary.data && summary.data.overall > 0 ? (
-        <Card title="Team averages" right={<Badge label={`${score(summary.data.overall)} avg`} tone="brand" />}>
+        <Card
+          title="Team averages"
+          right={<Badge label={`${score(summary.data.overall)} avg`} tone="brand" />}
+        >
           <View className="gap-3">
             {Object.values(EvalDimension).map((d) => (
               <ScoreBar key={d} label={DIMENSION_LABELS[d]} value={summary.data.averages[d]} />
@@ -142,7 +145,9 @@ export function TeamDetailScreen({ route, navigation }: Props) {
                     onPress={() => {
                       if (
                         typeof window !== 'undefined' &&
-                        window.confirm(`Are you sure you want to delete student ${fullName(s.user)}?`)
+                        window.confirm(
+                          `Are you sure you want to delete student ${fullName(s.user)}?`,
+                        )
                       ) {
                         deleteUser.mutate(s.user.id);
                       }
@@ -153,9 +158,7 @@ export function TeamDetailScreen({ route, navigation }: Props) {
                     <Text className="text-xs font-medium text-slate-700">Remove</Text>
                   </Pressable>
                 ) : null}
-                <Text className="text-base text-[#15803d]">
-                  {isExpanded ? '▲' : '▼'}
-                </Text>
+                <Text className="text-base text-[#000000]">{isExpanded ? '▲' : '▼'}</Text>
               </View>
             </Pressable>
 
@@ -193,4 +196,3 @@ export function TeamDetailScreen({ route, navigation }: Props) {
     </Screen>
   );
 }
-

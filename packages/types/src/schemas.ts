@@ -24,29 +24,47 @@ export const loginSchema = z.object({
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 
-export const registerSchema = z
-  .object({
-    email: z.string().email('Enter a valid email'),
-    password: z
-      .string()
-      .min(8, 'At least 8 characters')
-      .regex(/[a-zA-Z]/, 'Must contain a letter')
-      .regex(/[0-9]/, 'Must contain a number'),
-    confirmPassword: z.string(),
-    firstName: z.string().min(1, 'Required').max(60),
-    lastName: z.string().min(1, 'Required').max(60),
-    studentId: z.string().max(20).optional(),
-    organizationId: z.string().min(1, 'Select an organization').default('org1'),
-    role: roleSchema.default(Role.STUDENT),
-  })
+export const registerBaseSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters long')
+    .regex(/[a-zA-Z]/, 'Password must contain at least one letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  confirmPassword: z.string(),
+  firstName: z.string().min(1, 'First name is required').max(60, 'First name is too long'),
+  lastName: z.string().min(1, 'Last name is required').max(60, 'Last name is too long'),
+  studentId: z
+    .string()
+    .max(20, 'Student ID cannot exceed 20 digits')
+    .regex(/^\d+$/, 'Student ID must contain numbers only')
+    .optional()
+    .or(z.literal('')),
+  organizationId: z.string().min(1, 'Please select an organization from the list').default('org1'),
+  role: roleSchema.default(Role.STUDENT),
+});
+
+export const registerSchema = registerBaseSchema
   .refine((v) => v.password === v.confirmPassword, {
-    message: 'Passwords do not match',
+    message: 'Passwords do not match. Please try again',
     path: ['confirmPassword'],
-  });
+  })
+  .refine(
+    (v) => {
+      if (v.role === Role.STUDENT) {
+        return Boolean(v.studentId && v.studentId.trim().length > 0);
+      }
+      return true;
+    },
+    {
+      message: 'Student ID is required for students',
+      path: ['studentId'],
+    },
+  );
 export type RegisterInput = z.infer<typeof registerSchema>;
 
 /** What the API accepts on POST /auth/register (no confirmPassword round-trip). */
-export const registerPayloadSchema = registerSchema.innerType().omit({ confirmPassword: true });
+export const registerPayloadSchema = registerBaseSchema.omit({ confirmPassword: true });
 export type RegisterPayload = z.infer<typeof registerPayloadSchema>;
 
 export const publicUserSchema = z.object({
@@ -65,7 +83,11 @@ export const updateUserSchema = z.object({
   firstName: z.string().min(1, 'First name is required').optional(),
   lastName: z.string().min(1, 'Last name is required').optional(),
   email: z.string().email('Invalid email address').optional(),
-  studentId: z.string().nullable().optional(),
+  studentId: z
+    .string()
+    .regex(/^\d+$/, 'Must contain numbers only')
+    .nullable()
+    .optional(),
 });
 export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 
@@ -92,22 +114,155 @@ export const organizationSchema = z.object({
 });
 export type Organization = z.infer<typeof organizationSchema>;
 
+/* -- course name formatting ------------------------------------------------
+   Normalisation lives here rather than in the form so the API and the client
+   apply exactly one rule. Both are pure and idempotent: running them twice
+   yields the same string, which is what lets the schemas below transform on
+   every parse without drift.
+-------------------------------------------------------------------------- */
+
+/** Words that stay lowercase inside a title (never at either end). */
+const TITLE_MINOR_WORDS = new Set([
+  'a',
+  'an',
+  'and',
+  'as',
+  'at',
+  'but',
+  'by',
+  'for',
+  'in',
+  'nor',
+  'of',
+  'on',
+  'or',
+  'the',
+  'to',
+  'via',
+  'with',
+]);
+
+/**
+ * Initialisms common in course titles that should be upper-cased even when the
+ * instructor typed them in lowercase. Every entry is deliberately NOT an
+ * English word, so this can never fire on ordinary prose.
+ */
+const TITLE_INITIALISMS = new Set([
+  'ai',
+  'api',
+  'cpu',
+  'css',
+  'db',
+  'gpu',
+  'gui',
+  'html',
+  'http',
+  'ide',
+  'io',
+  'json',
+  'ml',
+  'oop',
+  'os',
+  'sql',
+  'ui',
+  'ux',
+  'xml',
+]);
+
+const capitalize = (word: string): string =>
+  word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+
+/**
+ * "software  PROCESS" -> "Software Process", "intro to ai" -> "Intro to AI".
+ *
+ * Short all-caps tokens are left alone: they are nearly always initialisms or
+ * roman numerals ("AI", "OOP", "II"), and rewriting them as "Ai"/"Ii" would be
+ * worse than the input. Longer all-caps words are treated as shouting.
+ */
+export function toTitleCase(raw: string): string {
+  const words = raw.trim().replace(/\s+/g, ' ').split(' ');
+  return words
+    .map((word, index) => {
+      if (word.length <= 3 && word === word.toUpperCase() && /[A-Z]/.test(word)) return word;
+      const lower = word.toLowerCase();
+      if (TITLE_INITIALISMS.has(lower)) return lower.toUpperCase();
+      const atEdge = index === 0 || index === words.length - 1;
+      if (!atEdge && TITLE_MINOR_WORDS.has(lower)) return lower;
+      // Hyphenated compounds capitalise on both sides: "object-oriented".
+      return lower.split('-').map(capitalize).join('-');
+    })
+    .join(' ');
+}
+
+const SEASONS = ['Fall', 'Winter', 'Spring', 'Summer'] as const;
+const TERM_PATTERN = /^(fall|winter|spring|summer)[\s-]*(\d{4})$/i;
+
+/** "fall2026", "FALL 2026", "fall-2026" -> "Fall 2026". null if unparseable. */
+export function normalizeTerm(raw: string): string | null {
+  const match = TERM_PATTERN.exec(raw.trim().replace(/\s+/g, ' '));
+  // Destructured rather than indexed: noUncheckedIndexedAccess types capture
+  // groups as possibly-undefined even when the pattern guarantees them.
+  const rawSeason = match?.[1];
+  const year = match?.[2];
+  if (!rawSeason || !year) return null;
+  const season = SEASONS.find((s) => s.toLowerCase() === rawSeason.toLowerCase());
+  return season ? `${season} ${year}` : null;
+}
+
+export const TERM_HINT = 'Use a season and a year, e.g. "Fall 2026".';
+
+const termSchema = z
+  .string()
+  .min(2, 'Required')
+  .max(40)
+  .refine((v) => normalizeTerm(v) !== null, TERM_HINT)
+  .transform((v) => normalizeTerm(v) ?? v.trim());
+
 export const createCourseSchema = z.object({
-  code: z.string().min(2, 'Required').max(20),
-  title: z.string().min(2, 'Required').max(120),
-  term: z.string().min(2, 'Required').max(40),
+  code: z
+    .string()
+    .min(2, 'Required')
+    .max(20)
+    .transform((v) => v.trim().replace(/\s+/g, ' ')),
+  title: z.string().min(2, 'Required').max(120).transform(toTitleCase),
+  term: termSchema,
   /** Defaults to the creating instructor's own organization. */
   organizationId: z.string().min(1).optional(),
 });
 export type CreateCourseInput = z.infer<typeof createCourseSchema>;
 
-export const courseSchema = createCourseSchema.extend({
+/**
+ * The RESPONSE shape, deliberately NOT derived from createCourseSchema. Rows
+ * written before the formatting rules existed would fail the strict term
+ * refinement, and a response schema that rejects its own database takes the
+ * whole dashboard down. Input is validated; output is only shaped.
+ */
+export const courseSchema = z.object({
+  code: z.string(),
+  title: z.string(),
+  term: z.string(),
   id: idSchema,
   organizationId: z.string(),
   instructorId: idSchema,
   createdAt: z.string(),
 });
 export type Course = z.infer<typeof courseSchema>;
+
+/** Every field optional; the owning school is fixed at creation time. */
+export const updateCourseSchema = createCourseSchema.partial().omit({ organizationId: true });
+export type UpdateCourseInput = z.infer<typeof updateCourseSchema>;
+
+/**
+ * What a course delete would destroy. Deleting a Course cascades through
+ * Team -> TeamMember and Team -> Evaluation, so the confirmation dialog has to
+ * be able to name the damage before the instructor commits to it.
+ */
+export const courseDeleteImpactSchema = z.object({
+  teamCount: z.number().int(),
+  memberCount: z.number().int(),
+  evaluationCount: z.number().int(),
+});
+export type CourseDeleteImpact = z.infer<typeof courseDeleteImpactSchema>;
 
 export const createTeamSchema = z.object({
   name: z.string().min(2, 'Team name is required').max(80),

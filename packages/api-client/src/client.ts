@@ -1,5 +1,6 @@
 import {
   authResponseSchema,
+  courseDeleteImpactSchema,
   courseSchema,
   organizationSchema,
   evaluationTargetSchema,
@@ -9,6 +10,7 @@ import {
   teamSummarySchema,
   type AuthResponse,
   type Course,
+  type CourseDeleteImpact,
   type Organization,
   type CreateCourseInput,
   type CreateTeamInput,
@@ -20,6 +22,7 @@ import {
   type SubmitEvaluationBatchInput,
   type Team,
   type TeamSummary,
+  type UpdateCourseInput,
   type UpdateTeamInput,
   type UpdateUserInput,
 } from '@repo/types';
@@ -120,9 +123,13 @@ export class ApiClient {
 
   /* -- users --------------------------------------------------------------- */
 
-  listStudents(search?: string): Promise<PublicUser[]> {
+  listStudents(
+    search?: string,
+    organizationId?: string,
+    scope?: 'mine' | 'all',
+  ): Promise<PublicUser[]> {
     return this.request('/users/students', {
-      query: { search },
+      query: { search, organizationId, scope },
       schema: z.array(publicUserSchema),
     });
   }
@@ -156,6 +163,26 @@ export class ApiClient {
 
   createCourse(input: CreateCourseInput): Promise<Course> {
     return this.request('/courses', { method: 'POST', body: input, schema: courseSchema });
+  }
+
+  updateCourse(id: string, input: UpdateCourseInput): Promise<Course> {
+    return this.request(`/courses/${id}`, {
+      method: 'PATCH',
+      body: input,
+      schema: courseSchema,
+    });
+  }
+
+  deleteCourse(id: string): Promise<{ id: string }> {
+    return this.request(`/courses/${id}`, {
+      method: 'DELETE',
+      schema: z.object({ id: z.string() }),
+    });
+  }
+
+  /** Counts what deleting this course would cascade away. */
+  getCourseDeleteImpact(id: string): Promise<CourseDeleteImpact> {
+    return this.request(`/courses/${id}/impact`, { schema: courseDeleteImpactSchema });
   }
 
   /* -- teams --------------------------------------------------------------- */

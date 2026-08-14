@@ -8,9 +8,9 @@ import {
   submitEvaluationBatchSchema,
   type SubmitEvaluationBatchInput,
 } from '@repo/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View, Image } from 'react-native';
 import { Alert } from '../components/Alert';
 import { AppShell } from '../components/AppShell';
 import { Avatar } from '../components/Avatar';
@@ -22,6 +22,7 @@ import { TextField } from '../components/TextField';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useEvaluationTargets, useSubmitEvaluations } from '../hooks/useEvaluations';
 import { fullName } from '../lib/format';
+import { useUiStore } from '../store/ui';
 import type { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'EvaluationForm'>;
@@ -33,6 +34,25 @@ const DIMENSION_ICONS: Record<string, string> = {
   workEthic: '⭐',
 };
 
+/**
+ * Lays the teammate cards out as a wrapping row on desktop and a horizontal
+ * scroller on phones. `shrink-0` on the children is what stops the scroller
+ * from compressing them all into the visible width instead of overflowing.
+ */
+function TeammateStrip({ isCompact, children }: { isCompact: boolean; children: ReactNode }) {
+  if (!isCompact) return <View className="flex-row flex-wrap gap-2">{children}</View>;
+
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerClassName="flex-row gap-2 py-1 pl-2 pr-4"
+    >
+      {children}
+    </ScrollView>
+  );
+}
+
 /** High-end collapsible guidance panel. */
 function IntroPanel() {
   const [open, setOpen] = useState(false);
@@ -43,21 +63,25 @@ function IntroPanel() {
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
         onPress={() => setOpen((v) => !v)}
-        className="flex-row items-center justify-between"
+        className="flex-row items-center justify-between gap-3"
       >
-        <View className="flex-row items-center gap-3">
-          <View className="h-9 w-9 items-center justify-center rounded-xl bg-[#15803d] shadow-xs">
+        {/* Without flex-1 here the title pushes the chevron past the card's
+            padding; the icon then hangs over the rounded edge. */}
+        <View className="flex-1 flex-row items-center gap-3">
+          <View className="h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#000000] shadow-xs">
             <Text className="text-lg">📋</Text>
           </View>
-          <View>
+          <View className="flex-1">
             <Text className="text-lg text-ink-900">Peer Evaluation Instructions</Text>
             <Text className="text-xs font-medium text-slate-500">
-              {open ? 'Click to collapse guidelines' : 'Click to view rating criteria & confidentiality policy'}
+              {open
+                ? 'Click to collapse guidelines'
+                : 'Click to view rating criteria & confidentiality policy'}
             </Text>
           </View>
         </View>
-        <View className="h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white">
-          <Text className="text-sm text-[#15803d]">{open ? '▲' : '▼'}</Text>
+        <View className="h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white">
+          <Text className="text-sm text-[#000000]">{open ? '▲' : '▼'}</Text>
         </View>
       </Pressable>
 
@@ -70,7 +94,10 @@ function IntroPanel() {
 
           <View className="gap-2.5">
             {EVAL_DIMENSIONS.map((d) => (
-              <View key={d} className="flex-row items-start gap-2.5 rounded-xl border border-slate-100/80 bg-white/80 p-3">
+              <View
+                key={d}
+                className="flex-row items-start gap-2.5 rounded-xl border border-slate-100/80 bg-white/80 p-3"
+              >
                 <Text className="text-base">{DIMENSION_ICONS[d]}</Text>
                 <View className="flex-1">
                   <Text className="text-sm text-ink-900">{DIMENSION_LABELS[d]}</Text>
@@ -81,7 +108,8 @@ function IntroPanel() {
           </View>
 
           <Text className="text-sm leading-5 text-slate-600">
-            💡 All 4 numeric ratings are required per teammate before submitting. Written comments are optional but encouraged.
+            💡 All 4 numeric ratings are required per teammate before submitting. Written comments
+            are optional but encouraged.
           </Text>
         </View>
       ) : null}
@@ -92,6 +120,7 @@ function IntroPanel() {
 export function EvaluationFormScreen({ route, navigation }: Props) {
   const { teamId, teamName } = route.params;
   const { isCompact } = useBreakpoint();
+  const setStudentTab = useUiStore((s) => s.setStudentTab);
   const targets = useEvaluationTargets(teamId);
   const submit = useSubmitEvaluations(teamId);
 
@@ -169,12 +198,14 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
     );
   }
 
-  const completedCount = formValues?.filter((ev) =>
-    ev?.ratings?.cooperation &&
-    ev?.ratings?.conceptualContribution &&
-    ev?.ratings?.practicalContribution &&
-    ev?.ratings?.workEthic
-  ).length ?? 0;
+  const completedCount =
+    formValues?.filter(
+      (ev) =>
+        ev?.ratings?.cooperation &&
+        ev?.ratings?.conceptualContribution &&
+        ev?.ratings?.practicalContribution &&
+        ev?.ratings?.workEthic,
+    ).length ?? 0;
 
   const totalTeammates = targets.data.length;
   const progressPercent = Math.round((completedCount / totalTeammates) * 100);
@@ -182,19 +213,32 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
   return (
     <AppShell>
       <View className="mx-auto w-full max-w-3xl gap-6 pb-12">
-        {/* Top Navigation Bar */}
-        <View className="flex-row items-center justify-between gap-4">
+        {/* Top Navigation Bar. The completion chip is long enough that on a
+            phone it would crush the back button, so the row wraps. */}
+        <View className="flex-row flex-wrap items-center justify-between gap-3">
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Go back"
-            onPress={() => navigation.goBack()}
+            accessibilityLabel="Back to my teams"
+            /* goBack() could land on Feedback or wherever the user came from;
+               the evaluation form belongs to a team, so back means the teams
+               list. */
+            onPress={() => {
+              setStudentTab('My Teams');
+              navigation.navigate('StudentDashboard');
+            }}
             className="h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-all"
           >
-            <Text className="text-2xl text-[#15803d]">←</Text>
+            <Image
+              source={{ uri: '/arrow-back-outline.svg' }}
+              accessibilityLabel="Back"
+              className="keep-bg icon-on-light"
+              style={{ width: 22, height: 22 }}
+              resizeMode="contain"
+            />
           </Pressable>
 
           <View className="flex-row items-center gap-2 rounded-full border border-slate-200 bg-slate-50/80 px-3.5 py-1.5 shadow-xs">
-            <Text className="text-sm text-[#15803d]">
+            <Text className="text-sm text-[#000000]">
               {completedCount} / {totalTeammates} Teammates Completed ({progressPercent}%)
             </Text>
           </View>
@@ -205,7 +249,7 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
           <Text className="text-3xl text-ink-900">{teamName} · Peer Assessment</Text>
           <View className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
             <View
-              className="h-full rounded-full bg-gradient-to-r from-[#15803d] to-slate-200 transition-all"
+              className="h-full rounded-full bg-gradient-to-r from-[#000000] to-slate-200 transition-all"
               style={{ width: `${progressPercent}%` }}
             />
           </View>
@@ -219,14 +263,17 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
           <Text className="text-sm uppercase tracking-wider text-slate-500">
             Select Teammate to Evaluate:
           </Text>
-          <View className="flex-row flex-wrap gap-2">
+          {/* One card per teammate. Wrapped on desktop; on a phone they stack
+              into a tall column that pushes the form off-screen, so there they
+              scroll sideways in a single row instead. */}
+          <TeammateStrip isCompact={isCompact}>
             {targets.data.map((target, idx) => {
               const selected = idx === activeTeammateIndex;
               const isDone = Boolean(
                 formValues?.[idx]?.ratings?.cooperation &&
                 formValues?.[idx]?.ratings?.conceptualContribution &&
                 formValues?.[idx]?.ratings?.practicalContribution &&
-                formValues?.[idx]?.ratings?.workEthic
+                formValues?.[idx]?.ratings?.workEthic,
               );
 
               return (
@@ -236,14 +283,16 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
                   accessibilityState={{ selected }}
                   onPress={() => setActiveTeammateIndex(idx)}
                   className={[
-                    'flex-row items-center gap-2.5 rounded-2xl px-4 py-2.5 transition-all shadow-xs',
+                    'shrink-0 flex-row items-center gap-2.5 rounded-2xl px-4 py-2.5 transition-all shadow-xs',
                     selected
                       ? 'liquid-glass-pill-active scale-105 border-slate-400'
                       : 'border border-slate-200 bg-white hover:bg-slate-50',
                   ].join(' ')}
                 >
                   <Avatar user={target.user} size={28} />
-                  <Text className={selected ? 'text-base text-[#15803d]' : 'text-base text-slate-700'}>
+                  <Text
+                    className={selected ? 'text-base text-[#000000]' : 'text-base text-slate-700'}
+                  >
                     {fullName(target.user)}
                   </Text>
                   {isDone ? (
@@ -254,7 +303,7 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
                 </Pressable>
               );
             })}
-          </View>
+          </TeammateStrip>
         </View>
 
         {/* Active Teammate Card */}
@@ -264,15 +313,20 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
           if (!target) return null;
 
           return (
-            <View key={field.id} className="gap-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-card">
+            <View
+              key={field.id}
+              className="gap-6 rounded-3xl border border-slate-200 bg-white p-4 shadow-card sm:p-6"
+            >
               {/* Teammate Header */}
-              <View className="flex-row items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <View className="flex-row flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
                 <View className="flex-row items-center gap-3.5">
                   <Avatar user={target.user} size={48} />
-                  <View>
+                  <View className="flex-1">
                     <Text className="text-2xl text-ink-900">{fullName(target.user)}</Text>
                     <Text className="text-xs font-medium text-slate-500">
-                      {target.user.studentId ? `Student ID: ${target.user.studentId}` : target.user.email}
+                      {target.user.studentId
+                        ? `Student ID: ${target.user.studentId}`
+                        : target.user.email}
                     </Text>
                   </View>
                 </View>
@@ -291,9 +345,7 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
                   >
                     <View className="flex-row items-center gap-2">
                       <Text className="text-lg">{DIMENSION_ICONS[dimension]}</Text>
-                      <Text className="text-lg text-ink-900">
-                        {DIMENSION_LABELS[dimension]}
-                      </Text>
+                      <Text className="text-lg text-ink-900">{DIMENSION_LABELS[dimension]}</Text>
                     </View>
 
                     <Controller
@@ -329,8 +381,14 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
                 ))}
               </View>
 
-              {/* Stepper Navigation Buttons */}
-              <View className="flex-row items-center justify-between gap-3 border-t border-slate-100 pt-4">
+              {/* Stepper Navigation Buttons. Redundant on a phone, where the
+                  horizontal teammate strip is the way to move between people —
+                  and too wide to sit side by side there anyway. */}
+              <View
+                className={`flex-row flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4 ${
+                  isCompact ? 'hidden' : ''
+                }`}
+              >
                 <Pressable
                   accessibilityRole="button"
                   disabled={activeTeammateIndex === 0}
@@ -346,10 +404,12 @@ export function EvaluationFormScreen({ route, navigation }: Props) {
                 {activeTeammateIndex < totalTeammates - 1 ? (
                   <Pressable
                     accessibilityRole="button"
-                    onPress={() => setActiveTeammateIndex((prev) => Math.min(totalTeammates - 1, prev + 1))}
+                    onPress={() =>
+                      setActiveTeammateIndex((prev) => Math.min(totalTeammates - 1, prev + 1))
+                    }
                     className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 hover:bg-slate-100 transition-all"
                   >
-                    <Text className="text-base text-[#15803d]">Next Teammate →</Text>
+                    <Text className="text-base text-[#000000]">Next Teammate →</Text>
                   </Pressable>
                 ) : (
                   <View className="rounded-full bg-slate-50 px-3.5 py-1.5 border border-slate-200">

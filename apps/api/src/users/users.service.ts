@@ -8,11 +8,26 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   /** All students, for the instructor's team-builder picker. */
-  async findStudents(search?: string): Promise<PublicUser[]> {
+  /**
+   * @param scope `mine` limits the result to students rostered on a team in one
+   * of this instructor's own courses. `all` returns every student in the
+   * organization — which is what the team builder needs, since a student not yet
+   * on any team must still be selectable.
+   */
+  async findStudents(
+    instructorId: string,
+    search?: string,
+    organizationId?: string,
+    scope: 'mine' | 'all' = 'all',
+  ): Promise<PublicUser[]> {
     const term = search?.trim();
     const users = await this.prisma.user.findMany({
       where: {
         role: Role.STUDENT,
+        ...(organizationId ? { organizationId } : {}),
+        ...(scope === 'mine'
+          ? { memberships: { some: { team: { course: { instructorId } } } } }
+          : {}),
         ...(term
           ? {
               OR: [

@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Patch, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Role, type PublicUser } from '@repo/types';
+import { CurrentUser, type RequestUser } from '../common/current-user.decorator';
 import { Roles } from '../common/roles.decorator';
 import { UsersService } from './users.service';
 
@@ -12,8 +13,13 @@ export class UsersController {
   @Get('students')
   @Roles(Role.INSTRUCTOR)
   @ApiOperation({ summary: 'List students (instructor only)' })
-  findStudents(@Query('search') search?: string): Promise<PublicUser[]> {
-    return this.users.findStudents(search);
+  findStudents(
+    @CurrentUser() user: RequestUser,
+    @Query('search') search?: string,
+    @Query('organizationId') organizationId?: string,
+    @Query('scope') scope?: 'mine' | 'all',
+  ): Promise<PublicUser[]> {
+    return this.users.findStudents(user.id, search, organizationId, scope ?? 'all');
   }
 
   @Get(':id')

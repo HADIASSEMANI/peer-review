@@ -38,13 +38,33 @@ async function bootstrap(): Promise<void> {
   // is NOT treated as a wildcard by the cors package, so it has to be passed
   // through as the bare string or every deployed request is rejected.
   const corsOrigin = process.env.CORS_ORIGIN?.trim();
+  const allowAnyOrigin = !corsOrigin || corsOrigin === '*';
+  const allowlist = (corsOrigin ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter((o) => o.length > 0 && o !== '*');
+  // Vite hops to the next free port (5173 -> 5174 -> ...) whenever the
+  // default is taken. A hardcoded dev origin therefore falls out of the
+  // allowlist at random, and the browser reports the rejected preflight as an
+  // opaque "Failed to fetch". Outside production, accept any loopback origin
+  // on any port so port drift can never break local dev again.
+  const isProduction = process.env.NODE_ENV === 'production';
+  const LOOPBACK_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/;
   app.enableCors({
-    origin:
-      !corsOrigin || corsOrigin === '*'
-        ? true
-        : corsOrigin.split(',').map((o) => o.trim()),
+    origin: (requestOrigin, callback) => {
+      // Non-browser callers (curl, Render health checks) send no Origin.
+      if (!requestOrigin || allowAnyOrigin || allowlist.includes(requestOrigin)) {
+        callback(null, true);
+        return;
+      }
+      if (!isProduction && LOOPBACK_ORIGIN.test(requestOrigin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
     // `credentials` cannot be combined with a literal "*" origin; reflecting
-    // the request origin (origin: true) keeps cookies working either way.
+    // the request origin keeps cookies working either way.
     credentials: true,
   });
   app.setGlobalPrefix('api');

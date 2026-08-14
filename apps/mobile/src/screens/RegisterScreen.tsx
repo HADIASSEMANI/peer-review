@@ -3,14 +3,16 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Role, registerSchema, type RegisterInput } from '@repo/types';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Image, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { AppShell } from '../components/AppShell';
+import { AuthBranding } from '../components/AuthBranding';
 import { GradientButton } from '../components/GradientButton';
 import { SelectField } from '../components/SelectField';
 import { TextField } from '../components/TextField';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import { useRegister } from '../hooks/useAuth';
 import type { RootStackParamList } from '../navigation/types';
+import { ButtonGroup } from '../components/ButtonGroup';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
@@ -40,7 +42,7 @@ const STEPS = [
 const STEP_FIELDS: Array<Array<keyof RegisterInput>> = [
   [],
   ['firstName', 'lastName'],
-  ['email'],
+  ['studentId', 'email'],
   ['password'],
 ];
 
@@ -89,7 +91,7 @@ export function RegisterScreen({ navigation }: Props) {
 
   const goBack = () => {
     if (step === 0) {
-      navigation.goBack();
+      navigation.navigate('Login');
       return;
     }
     resetStepErrors();
@@ -119,40 +121,14 @@ export function RegisterScreen({ navigation }: Props) {
   return (
     <AppShell showHeader={false}>
       <View
-        className={`flex-1 items-center justify-center gap-6 py-4 ${
+        className={`flex-1 items-center justify-center gap-6 py-4 z-0 ${
           isWide ? 'flex-row gap-12' : 'flex-col'
         }`}
       >
-        {/* Left / Top branding section — identical to Login */}
-        <View
-          className={`items-center justify-center gap-6 p-4 ${
-            isWide ? 'max-w-sm' : 'w-full max-w-md'
-          }`}
-        >
-          <Image
-            source={{ uri: '/team-logo.svg' }}
-            accessibilityLabel="Team logo"
-            style={{ width: isWide ? 335 : 240, height: isWide ? 100 : 70 }}
-            resizeMode="contain"
-          />
-          <Text
-            className={`text-center font-normal text-ink ${
-              isWide ? 'text-[28px] leading-10' : 'text-xl sm:text-2xl'
-            }`}
-          >
-            Web-based Peer Assessment{'\n'}and Team Coordination Hub
-          </Text>
-        </View>
-
-        {/* Divider */}
-        <View
-          className={
-            isWide ? 'h-[320px] w-px bg-[#d3d3d3]' : 'h-px w-full max-w-md bg-[#d3d3d3] my-2'
-          }
-        />
+        <AuthBranding />
 
         {/* Form Card — same box as Login's */}
-        <View className="w-full max-w-md rounded-lg bg-white p-6 shadow-card sm:p-8">
+        <View className="w-full max-w-md rounded-2xl bg-white p-6 shadow-card sm:p-8 gap-2">
           <View className="mb-4 gap-1 border-b border-[#d3d3d3] pb-3">
             <Text className="text-2xl text-ink-900">Create your Account</Text>
             <Text className="text-sm text-slate-500">
@@ -175,18 +151,16 @@ export function RegisterScreen({ navigation }: Props) {
                 }}
                 className={[
                   'h-1.5 flex-1 rounded-full',
-                  i <= step ? 'accent-fill' : 'bg-slate-200',
+                  i <= step ? 'accent-fill' : 'progress-track bg-slate-200',
                 ].join(' ')}
               />
             ))}
           </View>
 
-          {/* Fixed height so the card does not resize between steps */}
-          <View className="min-h-[286px] justify-start gap-4">
-            <Text className="text-base text-ink-900">{STEPS[step]?.title}</Text>
-
+          {/* Fixed height so the card does not resize between steps and matches Login card */}
+          <View className="relative z-50 min-h-[232px] justify-start gap-y-4">
             {step === 0 ? (
-              <>
+              <View className="py-3 gap-5">
                 <SelectField
                   label="Role"
                   placeholder="Select a Role"
@@ -213,7 +187,7 @@ export function RegisterScreen({ navigation }: Props) {
                   options={ORGANIZATIONS}
                   error={orgError}
                 />
-              </>
+              </View>
             ) : null}
 
             {step === 1 ? (
@@ -264,9 +238,13 @@ export function RegisterScreen({ navigation }: Props) {
                         label="Enter your student ID:"
                         placeholder="Student ID"
                         value={field.value ?? ''}
-                        onChangeText={field.onChange}
+                        onChangeText={(val) => {
+                          // Strip non-digit characters on input
+                          field.onChange(val.replace(/\D/g, ''));
+                        }}
+                        keyboardType="numeric"
                         error={fieldState.error?.message}
-                      onSubmitEditing={onFieldSubmit}
+                        onSubmitEditing={onFieldSubmit}
                       />
                     )}
                   />
@@ -316,30 +294,35 @@ export function RegisterScreen({ navigation }: Props) {
             ) : null}
           </View>
 
-          <View className="gap-3 border-t border-[#d3d3d3] pt-4">
+          <View className="gap-2.5 border-t border-[#d3d3d3] z-0 mt-4 pt-4">
             {register.isError ? (
-              <Text className="text-sm text-slate-700">
-                {(register.error as Error).message}
-              </Text>
+              <View className="rounded-lg border border-red-200 bg-red-50 p-2.5">
+                <Text className="text-xs font-medium text-red-700">
+                  {(register.error as Error).message}
+                </Text>
+              </View>
             ) : null}
 
-            {isLast ? (
-              <GradientButton
-                label="Create Account"
-                onPress={onSubmit}
-                loading={register.isPending}
-                height={52}
+            <View className="pt-2 z-0">
+              <ButtonGroup
+                items={[
+                  {
+                    label: step === 0 ? 'Back to sign in' : 'Back',
+                    loading: register.isPending,
+                    onPress: isLast ? onSubmit : goBack,
+                  },
+                  {
+                    label: isLast ? 'Create Account' : 'Next',
+                    primary: true,
+                    onPress: () => {
+                      isLast ? onSubmit() : goNext();
+                      if (!isLast) clearErrors();
+                    },
+                  },
+                ]}
+                height={56}
               />
-            ) : (
-              <GradientButton label="Next" onPress={() => void goNext()} height={52} />
-            )}
-
-            <GradientButton
-              label={step === 0 ? 'Back to sign in' : 'Back'}
-              tone="ghost"
-              onPress={goBack}
-              height={46}
-            />
+            </View>
           </View>
         </View>
       </View>

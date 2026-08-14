@@ -8,7 +8,7 @@ interface TextFieldProps {
   error?: string;
   secureTextEntry?: boolean;
   autoCapitalize?: 'none' | 'sentences' | 'words';
-  keyboardType?: 'default' | 'email-address';
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'number-pad';
   multiline?: boolean;
   numberOfLines?: number;
   required?: boolean;
@@ -41,7 +41,11 @@ export function TextField({
   onSubmitEditing,
 }: TextFieldProps) {
   return (
-    <View className={['w-full gap-2', className].filter(Boolean).join(' ')}>
+    <View
+      className={['relative w-full gap-2 pt-2.5', error ? 'z-50' : 'z-10', className]
+        .filter(Boolean)
+        .join(' ')}
+    >
       {label ? (
         <Text className="text-base text-ink-700">
           {label}
@@ -61,20 +65,26 @@ export function TextField({
         multiline={multiline}
         numberOfLines={numberOfLines}
         editable={editable}
+        selectionColor="#0f172a"
         // Enter submits. Multiline fields keep Enter for newlines.
         onSubmitEditing={multiline ? undefined : onSubmitEditing}
-        blurOnSubmit={!multiline}
         returnKeyType={multiline ? undefined : 'go'}
         className={[
-          'rounded-xl border bg-white px-3.5 py-3 text-base text-ink placeholder:text-muted focus:border-brand-500 focus:bg-white',
-          error ? 'border-amber-500' : 'border-divider',
+          'min-h-[48px] rounded-xl border bg-white px-3.5 py-2 text-base text-inkfocus:border-brand-500 focus:bg-white',
+          error ? 'border-red-500 bg-red-50/20' : 'border-divider',
         ].join(' ')}
       />
-      {/* Fixed-height slot: the message appears and disappears without moving
-          anything below it, which otherwise makes the whole form jump. */}
-      <View className="h-5 justify-center">
-        {error ? <Text className="text-sm text-amber-700">{error}</Text> : null}
-      </View>
+      {/* Floating Pop-up error notification badge */}
+      {error ? (
+        <View
+          style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 50 }}
+          pointerEvents="none"
+        >
+          <View className="mt-1 self-start rounded-md border border-red-200 bg-red-50 px-2.5 py-1 shadow-sm">
+            <Text className="text-xs font-medium text-red-700">{error}</Text>
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }

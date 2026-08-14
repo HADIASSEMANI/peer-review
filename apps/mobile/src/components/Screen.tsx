@@ -32,7 +32,7 @@ export function Screen({ children, title, subtitle, refreshing = false, onRefres
 export function Loading({ label = 'Loading…' }: { label?: string }) {
   return (
     <View className="flex-1 items-center justify-center gap-3 bg-slate-50 py-16">
-      <ActivityIndicator size="large" color="#15803d" />
+      <ActivityIndicator size="large" color="#000000" />
       <Text className="text-sm text-ink-500">{label}</Text>
     </View>
   );

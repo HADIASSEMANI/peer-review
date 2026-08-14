@@ -74,7 +74,7 @@ export function RootNavigator() {
             <Stack.Screen
               name="InstructorDashboard"
               component={InstructorDashboardScreen}
-              options={{ title: 'Instructor dashboard' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen name="TeamDetail" component={TeamDetailScreen} options={{ title: 'Team' }} />
             <Stack.Screen

@@ -1,4 +1,5 @@
 import { createZodDto } from 'nestjs-zod';
-import { createCourseSchema } from '@repo/types';
+import { createCourseSchema, updateCourseSchema } from '@repo/types';
 
 export class CreateCourseDto extends createZodDto(createCourseSchema) {}
+export class UpdateCourseDto extends createZodDto(updateCourseSchema) {}

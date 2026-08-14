@@ -60,15 +60,22 @@ export function DataTable<T>({
               accessibilityRole={onRowPress ? 'button' : undefined}
               onPress={onRowPress ? () => onRowPress(row) : undefined}
               className={[
-                'rounded-lg border bg-white p-3',
-                selected ? 'border-primary bg-primary-soft' : 'border-hair',
-                onRowPress ? 'cursor-pointer' : 'cursor-default',
+                'rounded-2xl border bg-white p-4 transition-all shadow-card',
+                selected ? 'liquid-glass-active' : 'border-slate-200',
+                onRowPress ? 'liquid-glass-row cursor-pointer' : 'cursor-default',
               ].join(' ')}
             >
               {primary ? (
                 <View className="mb-2 border-b border-hair pb-2">
                   {typeof primary.render(row) === 'string' || typeof primary.render(row) === 'number' ? (
-                    <Text className="text-lg text-ink text-left cursor-default">{primary.render(row)}</Text>
+                    <Text
+                      className={[
+                        'text-lg text-ink text-left',
+                        onRowPress ? 'cursor-pointer' : 'cursor-default',
+                      ].join(' ')}
+                    >
+                      {primary.render(row)}
+                    </Text>
                   ) : (
                     primary.render(row)
                   )}
@@ -82,7 +89,14 @@ export function DataTable<T>({
                     </Text>
                     <View className="flex-[2] items-start justify-center">
                       {typeof col.render(row) === 'string' || typeof col.render(row) === 'number' ? (
-                        <Text className="text-left text-sm text-ink cursor-default">{col.render(row)}</Text>
+                        <Text
+                          className={[
+                            'text-left text-sm text-ink',
+                            onRowPress ? 'cursor-pointer' : 'cursor-default',
+                          ].join(' ')}
+                        >
+                          {col.render(row)}
+                        </Text>
                       ) : (
                         col.render(row)
                       )}
@@ -98,16 +112,19 @@ export function DataTable<T>({
   }
 
   return (
-    <ScrollView horizontal={false} className="rounded-md border border-hair">
+    <View className="overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 shadow-card">
       <View className="w-full">
-        <View className="flex-row items-center border-b border-hair bg-surface">
-          {columns.map((col) => (
+        <View className="flex-row items-center rounded-xl border-b border-slate-200 bg-slate-50/80 mb-1">
+          {columns.map((col, i) => (
             <View
               key={col.key}
-              className="border-r border-hair px-3 py-2.5 justify-center min-h-[44px]"
+              className={[
+                'px-4 py-3 justify-center min-h-[46px]',
+                i < columns.length - 1 ? 'border-r border-slate-200' : '',
+              ].join(' ')}
               style={{ flex: col.width ?? 1 }}
             >
-              <Text className="text-sm uppercase tracking-wide text-ink text-left">
+              <Text className="text-xs font-semibold uppercase tracking-wider text-slate-500 text-left">
                 {col.header}
               </Text>
             </View>
@@ -117,25 +134,38 @@ export function DataTable<T>({
         {rows.map((row, index) => {
           const selected = selectedKey === keyExtractor(row);
           const RowComponent = onRowPress ? Pressable : View;
+          const isLast = index === rows.length - 1;
           return (
             <RowComponent
               key={keyExtractor(row)}
               accessibilityRole={onRowPress ? 'button' : undefined}
               onPress={onRowPress ? () => onRowPress(row) : undefined}
               className={[
-                'flex-row items-center border-b border-hair transition-all',
-                selected ? 'liquid-glass-active' : index % 2 === 1 ? 'bg-surface' : 'bg-white',
-                onRowPress ? 'hover:bg-slate-50/50 cursor-pointer' : 'cursor-default',
+                'flex-row items-center rounded-xl my-0.5 transition-all overflow-hidden',
+                !isLast && !selected ? 'border-b border-slate-100' : '',
+                selected ? 'liquid-glass-active' : index % 2 === 1 ? 'bg-slate-50/40' : 'bg-white',
+                onRowPress ? 'liquid-glass-row cursor-pointer' : 'cursor-default',
               ].join(' ')}
             >
-              {columns.map((col) => (
+              {columns.map((col, i) => (
                 <View
                   key={col.key}
-                  className="border-r border-hair px-3 py-2.5 justify-center min-h-[52px]"
+                  className={[
+                    'px-4 py-3.5 justify-center min-h-[52px]',
+                    onRowPress ? 'cursor-pointer' : '',
+                    i < columns.length - 1 ? 'border-r border-slate-100' : '',
+                  ].join(' ')}
                   style={{ flex: col.width ?? 1 }}
                 >
                   {typeof col.render(row) === 'string' || typeof col.render(row) === 'number' ? (
-                    <Text className="text-sm text-ink text-left cursor-default">{col.render(row)}</Text>
+                    <Text
+                      className={[
+                        'text-sm font-normal text-slate-800 text-left',
+                        onRowPress ? 'cursor-pointer' : 'cursor-default',
+                      ].join(' ')}
+                    >
+                      {col.render(row)}
+                    </Text>
                   ) : (
                     col.render(row)
                   )}
@@ -145,6 +175,6 @@ export function DataTable<T>({
           );
         })}
       </View>
-    </ScrollView>
+    </View>
   );
 }

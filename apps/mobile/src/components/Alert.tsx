@@ -11,7 +11,7 @@ interface AlertProps {
 export function Alert({ title, children, tone = 'danger', onClose }: AlertProps) {
   const palette =
     tone === 'danger'
-      ? { box: 'border-slate-300 bg-slate-50', title: 'text-slate-800', body: 'text-slate-700' }
+      ? { box: 'border-slate-300 bg-slate-50', title: 'text-slate-800 swap-white-to-orange', body: 'text-slate-700 swap-white-to-orange' }
       : { box: 'border-primary/30 bg-primary-soft', title: 'text-primary', body: 'text-ink' };
 
   return (

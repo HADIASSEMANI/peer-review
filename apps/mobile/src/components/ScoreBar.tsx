@@ -18,7 +18,7 @@ export function ScoreBar({ label, value }: ScoreBarProps) {
           <Text className="text-xs font-normal text-ink-500"> / {RATING_MAX}</Text>
         </Text>
       </View>
-      <View className="h-2 overflow-hidden rounded-full bg-slate-200">
+      <View className="progress-track h-2 overflow-hidden rounded-full bg-slate-200">
         <View className="h-full rounded-full bg-brand-500" style={{ width: scoreToWidth(value) }} />
       </View>
     </View>

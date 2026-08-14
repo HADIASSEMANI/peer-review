@@ -14,6 +14,9 @@ export const ORGANIZATIONS = [
 
 export const DEFAULT_ORG = 'org1';
 
-export const orgLabel = (value: string | null | undefined): string =>
-  ORGANIZATIONS.find((o) => o.value === value)?.label ?? 'Unknown organization';
+export const orgLabel = (value: string | null | undefined): string => {
+  const safeValue = value || DEFAULT_ORG;
+  const match = ORGANIZATIONS.find((o) => o.value === safeValue || o.label === safeValue);
+  return match?.label ?? safeValue;
+};
 

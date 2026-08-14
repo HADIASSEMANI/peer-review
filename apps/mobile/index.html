@@ -12,6 +12,16 @@
       #root { display: flex; flex-direction: column; }
       body { background: #f8fafc; -webkit-font-smoothing: antialiased; }
     </style>
+    <script>
+      (function() {
+        try {
+          var isNight = localStorage.getItem('night-mode');
+          if (isNight === 'true') {
+            document.documentElement.classList.add('night-mode');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

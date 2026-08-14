@@ -2,8 +2,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { loginSchema, type LoginInput } from '@repo/types';
 import { Controller, useForm } from 'react-hook-form';
-import { Image, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { AppShell } from '../components/AppShell';
+import { AuthBranding } from '../components/AuthBranding';
 import { ButtonGroup } from '../components/ButtonGroup';
 import { TextField } from '../components/TextField';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -16,10 +17,18 @@ export function LoginScreen({ navigation }: Props) {
   const login = useLogin();
   const { isWide } = useBreakpoint();
 
-  const { control, handleSubmit, setValue } = useForm<LoginInput>({
+  const { control, handleSubmit, setValue, clearErrors } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
+    mode: 'onTouched',
     defaultValues: { email: '', password: '' },
   });
+
+  const clearAllErrors = () => {
+    clearErrors();
+    if (login.isError) {
+      login.reset();
+    }
+  };
 
   const onSubmit = handleSubmit((values) => {
     login.mutate(values);
@@ -32,101 +41,89 @@ export function LoginScreen({ navigation }: Props) {
           isWide ? 'flex-row gap-12' : 'flex-col'
         }`}
       >
-        {/* Left / Top branding section */}
-        <View
-          className={`items-center justify-center gap-6 p-4 ${
-            isWide ? 'max-w-sm' : 'w-full max-w-md'
-          }`}
-        >
-          <Image
-            source={{ uri: '/team-logo.svg' }}
-            accessibilityLabel="Team logo"
-            style={{ width: isWide ? 335 : 240, height: isWide ? 100 : 70 }}
-            resizeMode="contain"
-          />
-          <Text
-            className={`text-center font-normal text-ink ${
-              isWide ? 'text-[28px] leading-10' : 'text-xl sm:text-2xl'
-            }`}
-          >
-            Web-based Peer Assessment{'\n'}and Team Coordination Hub
-          </Text>
-        </View>
-
-        {/* Divider */}
-        <View
-          className={
-            isWide
-              ? 'h-[320px] w-px bg-[#d3d3d3]'
-              : 'h-px w-full max-w-md bg-[#d3d3d3] my-2'
-          }
-        />
+        <AuthBranding />
 
         {/* Form Card */}
-        <View className="w-full max-w-md rounded-lg bg-white p-6 shadow-card sm:p-8">
-          <View className="gap-4">
-            <Controller
-              control={control}
-              name="email"
-              render={({ field, fieldState }) => (
-                <TextField
-                  testID="login-email"
-                  label="Enter your email address:"
-                  placeholder="Email Address"
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  keyboardType="email-address"
-                  error={fieldState.error?.message}
-                  onSubmitEditing={onSubmit}
-                  required
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="password"
-              render={({ field, fieldState }) => (
-                <TextField
-                  testID="login-password"
-                  label="Password"
-                  placeholder="Password"
-                  value={field.value}
-                  onChangeText={field.onChange}
-                  secureTextEntry
-                  error={fieldState.error?.message}
-                  onSubmitEditing={onSubmit}
-                  required
-                />
-              )}
-            />
-
-            {login.isError ? (
-              <Text className="text-sm text-amber-700">{(login.error as Error).message}</Text>
-            ) : null}
-
-            {/* Sign in and sign up share one capsule: they are alternatives,
-                not a primary action followed by an afterthought. */}
-            <View className="pt-2">
-              <ButtonGroup
-                items={[
-                  {
-                    label: 'Login',
-                    testID: 'login-submit',
-                    primary: true,
-                    loading: login.isPending,
-                    onPress: onSubmit,
-                  },
-                  {
-                    label: 'Create new account',
-                    onPress: () => navigation.navigate('Register'),
-                  },
-                ]}
-                height={56}
+        <View className="w-full max-w-md rounded-2xl bg-white p-6 shadow-card sm:p-8">
+          <View className="gap-10">
+            {/* Main credentials and primary actions unit */}
+            <View className="gap-5">
+              <Controller
+                control={control}
+                name="email"
+                render={({ field, fieldState }) => (
+                  <TextField
+                    testID="login-email"
+                    label="Enter your email address:"
+                    placeholder="Email Address"
+                    value={field.value}
+                    onChangeText={(val) => {
+                      field.onChange(val);
+                      clearAllErrors();
+                    }}
+                    keyboardType="email-address"
+                    error={fieldState.error?.message}
+                    onSubmitEditing={onSubmit}
+                    required
+                  />
+                )}
               />
+
+              <Controller
+                control={control}
+                name="password"
+                render={({ field, fieldState }) => (
+                  <TextField
+                    testID="login-password"
+                    label="Password"
+                    placeholder="Password"
+                    value={field.value}
+                    onChangeText={(val) => {
+                      field.onChange(val);
+                      clearAllErrors();
+                    }}
+                    secureTextEntry
+                    error={fieldState.error?.message}
+                    onSubmitEditing={onSubmit}
+                    required
+                  />
+                )}
+              />
+
+              {login.isError ? (
+                <View className="rounded-lg border border-red-200 bg-red-50 p-2.5">
+                  <Text className="text-xs font-medium text-red-700">
+                    {(login.error as Error).message}
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* Sign in and sign up share one capsule */}
+              <View className="pt-2">
+                <ButtonGroup
+                  items={[
+                    {
+                      label: 'Login',
+                      testID: 'login-submit',
+                      primary: true,
+                      loading: login.isPending,
+                      onPress: onSubmit,
+                    },
+                    {
+                      label: 'Create new account',
+                      onPress: () => {
+                        clearAllErrors();
+                        navigation.navigate('Register');
+                      },
+                    },
+                  ]}
+                  height={56}
+                />
+              </View>
             </View>
 
-            <View className="gap-2 pt-2 border-t border-[#d3d3d3]">
+            {/* Demo autofill section */}
+            <View className="gap-2.5 pt-3 border-t border-[#d3d3d3]">
               <Text className="text-center text-xs font-medium text-muted">
                 Click a demo account below to autofill login credentials:
               </Text>
@@ -142,6 +139,7 @@ export function LoginScreen({ navigation }: Props) {
                     onPress: () => {
                       setValue('email', 'instructor@peerreview.dev');
                       setValue('password', 'Password123');
+                      clearAllErrors();
                     },
                   },
                   {
@@ -150,6 +148,7 @@ export function LoginScreen({ navigation }: Props) {
                     onPress: () => {
                       setValue('email', 'student@peerreview.dev');
                       setValue('password', 'Password123');
+                      clearAllErrors();
                     },
                   },
                 ]}
@@ -161,5 +160,3 @@ export function LoginScreen({ navigation }: Props) {
     </AppShell>
   );
 }
-
-
