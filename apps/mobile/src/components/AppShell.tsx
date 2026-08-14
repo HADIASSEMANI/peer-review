@@ -135,7 +135,7 @@ export function AppShell({
           screens have no header at any width, so on a phone it floats at the
           top left to match where the header would have put it. */}
       {!isCompact ? (
-        <View className="absolute bottom-16 right-5 z-30">
+        <View className="absolute bottom-5 left-5 z-30">
           <NightModeToggle />
         </View>
       ) : !showHeader ? (

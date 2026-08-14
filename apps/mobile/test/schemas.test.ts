@@ -21,6 +21,7 @@ describe('shared validation schemas', () => {
       email: 'a@b.dev',
       firstName: 'A',
       lastName: 'B',
+      studentId: '12345678',
       password: 'Password123',
       role: 'STUDENT' as const,
     };
