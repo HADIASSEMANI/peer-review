@@ -145,8 +145,8 @@ export function BottomNav() {
       ) : null}
 
       <View
-        className={`bubble-nav absolute bottom-3 left-3 right-3 z-50 h-[72px] flex-row items-center p-1.5 ${
-          showTabs ? '' : 'justify-center'
+        className={`bubble-nav absolute bottom-3 z-50 h-[72px] flex-row items-center p-1.5 ${
+          showTabs ? 'left-3 right-3' : 'left-[40vw] justify-center'
         }`}
       >
         {/* Sits behind the items; `left`/`width` come from the measurements. */}
@@ -184,12 +184,14 @@ export function BottomNav() {
                 source={{ uri: '/plus.svg' }}
                 accessibilityLabel="Create"
                 className="keep-bg icon-on-dark"
-                style={{
-                  width: 24,
-                  height: 24,
-                  transform: [{ rotate: '45deg' }],
-                  transition: 'transform 0.5s',
-                } as any}
+                style={
+                  {
+                    width: 24,
+                    height: 24,
+                    transform: [{ rotate: '45deg' }],
+                    transition: 'transform 0.5s',
+                  } as any
+                }
                 resizeMode="contain"
               />
             ) : (
@@ -197,12 +199,14 @@ export function BottomNav() {
                 source={{ uri: '/plus.svg' }}
                 accessibilityLabel="Create"
                 className="keep-bg icon-on-dark"
-                style={{
-                  width: 24,
-                  height: 24,
-                  transform: [{ rotate: '0deg' }],
-                  transition: 'transform 0.5s',
-                } as any}
+                style={
+                  {
+                    width: 24,
+                    height: 24,
+                    transform: [{ rotate: '0deg' }],
+                    transition: 'transform 0.5s',
+                  } as any
+                }
                 resizeMode="contain"
               />
             )}

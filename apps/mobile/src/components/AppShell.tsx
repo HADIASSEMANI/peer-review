@@ -94,9 +94,7 @@ function Header() {
 function Footer() {
   return (
     <View className="w-full items-center bg-white px-4 py-3 shadow-bar sm:px-6">
-      <Text className="text-center text-xs text-muted">
-        SOEN 341 · Peer Assessment and Team Coordination Hub
-      </Text>
+      <></>
     </View>
   );
 }
